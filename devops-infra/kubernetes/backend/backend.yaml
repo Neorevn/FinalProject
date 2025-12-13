@@ -23,6 +23,8 @@ spec:
               value: "mongodb://mongo:27017/office_app_db"
             - name: SECRET_KEY
               value: "production-secret-key-change-me"
+            - name: PROMETHEUS_MULTIPROC_DIR
+              value: "/tmp"
           resources:
             requests:
               memory: "128Mi"
