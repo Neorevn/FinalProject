@@ -9,6 +9,7 @@ pipeline {
         // You will need to create these credentials in Jenkins later
         DOCKER_CREDENTIALS_ID = 'docker-hub-creds'
         KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-creds'
+        AWS_CREDENTIALS_ID = 'aws-creds'
     }
     
     stages {
@@ -40,9 +41,11 @@ pipeline {
         
         stage('Deploy to K8s') {
             steps {
-                withKubeConfig([credentialsId: KUBECONFIG_CREDENTIALS_ID]) {
-                    sh "kubectl set image deployment/${K8S_DEPLOYMENT} ${K8S_DEPLOYMENT}=${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                    sh "kubectl rollout status deployment/${K8S_DEPLOYMENT}"
+                withAWS(credentials: AWS_CREDENTIALS_ID, region: 'us-east-1') {
+                    withKubeConfig([credentialsId: KUBECONFIG_CREDENTIALS_ID]) {
+                        sh "kubectl set image deployment/${K8S_DEPLOYMENT} ${K8S_DEPLOYMENT}=${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                        sh "kubectl rollout status deployment/${K8S_DEPLOYMENT}"
+                    }
                 }
             }
         }
