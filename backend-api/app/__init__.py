@@ -15,6 +15,7 @@ from .climate import climate_bp
 from .parking import parking_bp
 from .meeting_rooms import meeting_rooms_bp
 from .wellness import wellness_bp
+from .metrics import metrics_bp, before_request_hook, after_request_hook
 
 def initialize_database():
     """Initializes the database with default data if empty."""
@@ -87,6 +88,11 @@ def create_app():
     app.register_blueprint(parking_bp)
     app.register_blueprint(meeting_rooms_bp)
     app.register_blueprint(wellness_bp)
+    app.register_blueprint(metrics_bp)
+    
+    # Register Metrics Hooks
+    app.before_request(before_request_hook)
+    app.after_request(after_request_hook)
     
     # Health Check
     @app.route('/health')

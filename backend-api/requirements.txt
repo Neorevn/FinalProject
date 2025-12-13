@@ -5,3 +5,4 @@ python-dotenv
 APScheduler
 pyJWT
 gunicorn
+prometheus-client
