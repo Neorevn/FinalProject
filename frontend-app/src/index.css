@@ -1,0 +1,171 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body { 
+    font-family: 'Share Tech Mono', monospace;
+    background-color: #0a0a0a;
+    background-image: 
+        linear-gradient(rgba(13, 110, 253, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(13, 110, 253, 0.1) 1px, transparent 1px);
+    background-size: 2rem 2rem;
+    background-position: -1px -1px;
+    min-height: 100vh;
+    /* --- Custom Cyberpunk Cursor --- */
+    /* A cyan crosshair with a central dot. The 12 12 centers the cursor. */
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%230ff' stroke-width='1.5'%3E%3Cpath d='M12 2v20M2 12h20'/%3E%3Ccircle cx='12' cy='12' r='2' fill='%230ff'/%3E%3C/svg%3E") 12 12, auto;
+    margin: 0;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+@keyframes cyan-glow-pulse {
+    0%, 100% { box-shadow: 0 0 15px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3) inset; }
+    50% { box-shadow: 0 0 25px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.5) inset; }
+}
+@keyframes fuchsia-glow-pulse {
+    0%, 100% { box-shadow: 0 0 15px rgba(217, 70, 239, 0.5), 0 0 20px rgba(217, 70, 239, 0.3) inset; }
+    50% { box-shadow: 0 0 25px rgba(217, 70, 239, 0.8), 0 0 30px rgba(217, 70, 239, 0.5) inset; }
+}
+@keyframes text-cyan-glow-pulse {
+    0%, 100% { text-shadow: 0 0 8px rgba(0, 255, 255, 0.7); }
+    50% { text-shadow: 0 0 16px rgba(0, 255, 255, 1); }
+}
+@keyframes text-fuchsia-glow-pulse {
+    0%, 100% { text-shadow: 0 0 8px rgba(217, 70, 239, 0.7); }
+    50% { text-shadow: 0 0 16px rgba(217, 70, 239, 1); }
+}
+@keyframes green-glow-pulse {
+    0%, 100% { box-shadow: 0 0 15px rgba(52, 211, 153, 0.5), 0 0 20px rgba(52, 211, 153, 0.3) inset; }
+    50% { box-shadow: 0 0 25px rgba(52, 211, 153, 0.8), 0 0 30px rgba(52, 211, 153, 0.5) inset; }
+}
+@keyframes text-green-glow-pulse {
+    0%, 100% { text-shadow: 0 0 8px rgba(52, 211, 153, 0.7); }
+    50% { text-shadow: 0 0 16px rgba(52, 211, 153, 1); }
+}
+@keyframes orange-glow-pulse {
+    0%, 100% { box-shadow: 0 0 15px rgba(251, 146, 60, 0.5), 0 0 20px rgba(251, 146, 60, 0.3) inset; }
+    50% { box-shadow: 0 0 25px rgba(251, 146, 60, 0.8), 0 0 30px rgba(251, 146, 60, 0.5) inset; }
+}
+@keyframes text-orange-glow-pulse {
+    0%, 100% { text-shadow: 0 0 8px rgba(251, 146, 60, 0.7); }
+    50% { text-shadow: 0 0 16px rgba(251, 146, 60, 1); }
+}
+@keyframes pulse-red {
+    50% { box-shadow: 0 0 20px #ef4444; }
+}
+@keyframes pulse-cyan {
+    50% { box-shadow: 0 0 20px #22d3ee; }
+}
+@keyframes pulse-yellow {
+    50% { box-shadow: 0 0 20px #fde047; }
+}
+@keyframes pulse-green {
+    50% { box-shadow: 0 0 20px #34d399; }
+}
+@keyframes pulse-green-border {
+    50% { border-color: #6ee7b7; box-shadow: 0 0 10px #34d399 inset, 0 0 15px #34d399; }
+}
+@keyframes pulse-cyan-border {
+    50% { border-color: #67e8f9; box-shadow: 0 0 10px #22d3ee inset, 0 0 15px #22d3ee; }
+}
+
+
+@keyframes scanner {
+    0%, 100% { transform: scaleY(1); opacity: 1; }
+    50% { transform: scaleY(0.2); opacity: 0.5; }
+}
+.scanner-bar {
+    width: 4px;
+    height: 24px;
+    background-color: #22d3ee; /* cyan-400 */
+    animation: scanner 1.2s infinite ease-in-out;
+}
+/* Splash Screen Styling */
+#splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Use a dark background matching your theme */
+  background-color: #1a1a2e; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  opacity: 1;
+  /* This transition will smoothly fade out the splash screen */
+  transition: opacity 1.5s ease-out;
+}
+
+/* Class to hide the splash screen */
+#splash-screen.hidden {
+  opacity: 0;
+  /* Prevents the hidden splash screen from capturing mouse events */
+  pointer-events: none;
+}
+
+/* --- Custom Scrollbar --- */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+::-webkit-scrollbar-track {
+    background: #1a1a2e; /* A dark background */
+    border-left: 1px solid #581c87; /* purple-900 */
+}
+::-webkit-scrollbar-thumb {
+    background-color: #d946ef; /* fuchsia-500 */
+    border-radius: 6px;
+    border: 2px solid #1a1a2e;
+    box-shadow: 0 0 10px #d946ef;
+}
+::-webkit-scrollbar-thumb:hover {
+    background-color: #f0abfc;
+    box-shadow: 0 0 15px #f0abfc;
+}
+/* For Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #d946ef #1a1a2e;
+}
+
+/* --- Custom Select Dropdown Arrow --- */
+.cyber-select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    /* Base64 encoded SVG for a fuchsia chevron */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23d946ef' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem; /* Make space for the arrow */
+}
+.cyber-select:focus {
+    box-shadow: 0 0 15px rgba(217, 70, 239, 0.5);
+}
+/* Dark mode for dropdown options */
+select option {
+    background-color: #1a1a2e; /* Dark background matching the theme */
+    color: #e5e7eb; /* Light text */
+}
+/* Override custom cursor for interactive elements */
+button, a, select, .cursor-pointer {
+    /* A custom fuchsia pointer to replace the default hand cursor */
+    cursor: url("data:image/svg+xml,%3csvg width='24' height='24' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M4 2L18 12L10 14L4 22V2Z' fill='%23d946ef' stroke='%23f0abfc' stroke-width='1.5'/%3e%3c/svg%3e") 4 2, pointer;
+}
+input[type="text"], input[type="password"], input[type="number"], input[type="time"], input[type="date"], textarea { cursor: text; }
+
+.splash-logo {
+  width: 400px; /* Adjust size as needed */
+  animation: pulse 2s infinite ease-in-out;
+}
+
+/* Keyframe animation for the logo */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.1); opacity: 1; }
+}

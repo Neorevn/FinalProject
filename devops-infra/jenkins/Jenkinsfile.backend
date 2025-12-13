@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+    
+    environment {
+        // Replace with your Docker Hub username
+        DOCKER_IMAGE = 'neorevn/office-backend'
+        K8S_DEPLOYMENT = 'office-backend'
+        
+        // You will need to create these credentials in Jenkins later
+        DOCKER_CREDENTIALS_ID = 'docker-hub-creds'
+        KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-creds'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dockerImage = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}", "./backend-api")
+                }
+            }
+        }
+        
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry('', DOCKER_CREDENTIALS_ID) {
+                        dockerImage.push()
+                        dockerImage.push('latest')
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy to K8s') {
+            steps {
+                withKubeConfig([credentialsId: KUBECONFIG_CREDENTIALS_ID]) {
+                    sh "kubectl set image deployment/${K8S_DEPLOYMENT} ${K8S_DEPLOYMENT}=${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                    sh "kubectl rollout status deployment/${K8S_DEPLOYMENT}"
+                }
+            }
+        }
+    }
+}

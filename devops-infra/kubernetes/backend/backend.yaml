@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: office-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: office-backend
+  template:
+    metadata:
+      labels:
+        app: office-backend
+    spec:
+      containers:
+        - name: office-backend
+          image: neorevn/office-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          env:
+            - name: MONGO_URI
+              value: "mongodb://mongo:27017/office_app_db"
+            - name: SECRET_KEY
+              value: "production-secret-key-change-me"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: office-backend
+spec:
+  selector:
+    app: office-backend
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
