@@ -108,7 +108,7 @@ pipeline {
                         withKubeConfig([credentialsId: KUBECONFIG_CREDENTIALS_ID]) {
                             script {
                                 def podName = sh(script: "kubectl get pods -l app=office-frontend --field-selector=status.phase=Running -o jsonpath='{.items[0].metadata.name}'", returnStdout: true).trim()
-                                sh "kubectl exec ${podName} -- wget -qO- http://localhost:8080/health"
+                                sh "kubectl exec ${podName} -- wget -qO- http://127.0.0.1:8080/health"
                             }
                         }
                     }
