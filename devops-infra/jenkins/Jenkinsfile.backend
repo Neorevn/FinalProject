@@ -3,6 +3,10 @@ def dockerImage
 pipeline {
     agent any
     
+    triggers {
+        pollSCM '* * * * *'
+    }
+    
     environment {
         // Replace with your Docker Hub username
         DOCKER_IMAGE = 'neorevn/office-backend'
