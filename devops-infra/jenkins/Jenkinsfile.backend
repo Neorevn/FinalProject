@@ -35,7 +35,7 @@ pipeline {
             steps {
                 // Build a test image and run tests inside it to avoid volume mount issues
                 sh "docker build -t backend-test:${env.BUILD_NUMBER} ./backend-api"
-                sh "docker run --rm backend-test:${env.BUILD_NUMBER} pytest"
+                sh "docker run --rm backend-test:${env.BUILD_NUMBER} pytest tests/"
             }
         }
         
