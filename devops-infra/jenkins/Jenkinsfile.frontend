@@ -1,3 +1,5 @@
+def dockerImage
+
 pipeline {
     agent any
     
@@ -44,6 +46,8 @@ pipeline {
                 withCredentials([aws(credentialsId: AWS_CREDENTIALS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     withEnv(['AWS_DEFAULT_REGION=us-east-1']) {
                         withKubeConfig([credentialsId: KUBECONFIG_CREDENTIALS_ID]) {
+                            // Apply the manifest first to ensure replicas is set to 1
+                            sh "kubectl apply -f devops-infra/kubernetes/frontend/frontend.yaml"
                             sh "kubectl set image deployment/${K8S_DEPLOYMENT} ${K8S_DEPLOYMENT}=${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
                             sh "kubectl rollout status deployment/${K8S_DEPLOYMENT}"
                         }
