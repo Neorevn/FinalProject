@@ -41,9 +41,11 @@ Ensure you have the following tools installed:
 ```bash
 docker run -u root --rm -d -p 8080:8080 -p 50000:50000 -v jenkins-data:/var/jenkins_home -v /var/run/docker.sock:/var/run/docker.sock --name jenkins jenkins/jenkins:lts-jdk17
 ```
-Get password: docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
-Go to http://localhost:8080, paste password, and install "Suggested plugins". +3. Install Extra Plugins:
-Manage Jenkins > Plugins > Available: Docker Pipeline, Kubernetes CLI, AWS Credentials. +4. Configure Credentials:
+*   **`Get password`**: docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+*   **`Go to`** http://localhost:8080, paste password, and install "Suggested plugins". 
+*   **`Install`** Extra Plugins:
+Manage Jenkins > Plugins > Available: Docker Pipeline, Kubernetes CLI, AWS Credentials. 
+*   **`Configure Credentials`**:
 Manage Jenkins > Credentials > System > Global credentials > Add Credentials:
    *   **`aws-creds`**: *AWS Credentials* (Access Key ID & Secret Access Key).
    *   **`docker-hub-creds`**: *Username with password* (DockerHub Login).
