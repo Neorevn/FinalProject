@@ -122,4 +122,17 @@ pipeline {
             }
         }
     }
+
+    post {
+        success {
+            withCredentials([string(credentialsId: 'discord-webhook-url', variable: 'DISCORD_WEBHOOK')]) {
+                discordSend description: "Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' completed successfully.", link: env.BUILD_URL, result: 'SUCCESS', title: "Build Success", webhookURL: DISCORD_WEBHOOK
+            }
+        }
+        failure {
+            withCredentials([string(credentialsId: 'discord-webhook-url', variable: 'DISCORD_WEBHOOK')]) {
+                discordSend description: "Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' failed.", link: env.BUILD_URL, result: 'FAILURE', title: "Build Failure", webhookURL: DISCORD_WEBHOOK
+            }
+        }
+    }
 }
