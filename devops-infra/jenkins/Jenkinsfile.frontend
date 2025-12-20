@@ -93,5 +93,25 @@ pipeline {
                 }
             }
         }
+        
+        stage('Verify') {
+            when {
+                anyOf {
+                    changeset "frontend-app/**"
+                    changeset "devops-infra/kubernetes/frontend/**"
+                    changeset "devops-infra/jenkins/Jenkinsfile.frontend"
+                }
+            }
+            steps {
+                withCredentials([aws(credentialsId: AWS_CREDENTIALS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    withEnv(['AWS_DEFAULT_REGION=us-east-1']) {
+                        withKubeConfig([credentialsId: KUBECONFIG_CREDENTIALS_ID]) {
+                            // Run a temporary pod to curl the health endpoint
+                            sh "kubectl run curl-test-frontend-${env.BUILD_NUMBER} --image=curlimages/curl --restart=Never --rm -i -- --fail --connect-timeout 5 --max-time 10 http://office-frontend:80/health"
+                        }
+                    }
+                }
+            }
+        }
     }
 }
