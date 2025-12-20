@@ -26,3 +26,6 @@ npm-debug.log
 # OS
 Thumbs.db
 Desktop.ini
+
+# Secrets
+**/secret.yaml

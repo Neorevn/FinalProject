@@ -42,10 +42,17 @@ pipeline {
         
         stage('Deploy to K8s') {
             steps {
-                withCredentials([aws(credentialsId: AWS_CREDENTIALS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                withCredentials([
+                    aws(credentialsId: AWS_CREDENTIALS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'),
+                    string(credentialsId: 'mongo-uri', variable: 'MONGO_URI'),
+                    string(credentialsId: 'flask-secret-key', variable: 'FLASK_SECRET_KEY')
+                ]) {
                     withEnv(['AWS_DEFAULT_REGION=us-east-1']) {
                         withKubeConfig([credentialsId: KUBECONFIG_CREDENTIALS_ID]) {
-                            // Apply the manifest first to ensure replicas is set to 1
+                            // Create secret dynamically from Jenkins credentials (securely)
+                            sh 'kubectl create secret generic backend-secrets --from-literal=MONGO_URI="$MONGO_URI" --from-literal=SECRET_KEY="$FLASK_SECRET_KEY" --dry-run=client -o yaml | kubectl apply -f -'
+                            
+                            // Apply backend manifest
                             sh "kubectl apply -f devops-infra/kubernetes/backend/backend.yaml"
                             sh "kubectl set image deployment/${K8S_DEPLOYMENT} ${K8S_DEPLOYMENT}=${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
                             sh "kubectl rollout status deployment/${K8S_DEPLOYMENT}"

@@ -20,9 +20,15 @@ spec:
             - containerPort: 5000
           env:
             - name: MONGO_URI
-              value: "mongodb://mongo:27017/office_app_db"
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: MONGO_URI
             - name: SECRET_KEY
-              value: "production-secret-key-change-me"
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: SECRET_KEY
             - name: PROMETHEUS_MULTIPROC_DIR
               value: "/tmp"
           resources:
