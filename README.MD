@@ -1,7 +1,7 @@
 # DevOps Final Project: Full-Stack Office Application
 
 <p align="center">
-  <img src="<img width="499" height="594" alt="Image" src="https://github.com/user-attachments/assets/b1a86c2b-b383-42e6-895d-7671097311b8" />" width="400">
+  <img src="https://github.com/user-attachments/assets/b1a86c2b-b383-42e6-895d-7671097311b8" width="400" alt="Officer Logo">
 </p>
 
 A complete, production-ready DevOps implementation for a full-stack web application. This project demonstrates Infrastructure as Code (IaC), Containerization, Orchestration, CI/CD, and Monitoring on AWS.
