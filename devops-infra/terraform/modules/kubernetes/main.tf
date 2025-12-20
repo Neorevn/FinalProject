@@ -72,12 +72,12 @@ resource "aws_eks_node_group" "main" {
   subnet_ids      = var.subnet_ids
 
   scaling_config {
-    desired_size = 2
-    max_size     = 3
+    desired_size = 1
+    max_size     = 2
     min_size     = 1
   }
 
-  instance_types = ["t3.small"]
+  instance_types = ["t3a.small", "t3.small"]
   capacity_type  = "SPOT" # Use Spot instances for significant cost savings
 
   depends_on = [

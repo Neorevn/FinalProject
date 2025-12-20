@@ -20,6 +20,13 @@ from .metrics import metrics_bp, before_request_hook, after_request_hook
 def initialize_database():
     """Initializes the database with default data if empty."""
     logging.info("Application: Checking database initialization...")
+    
+    try:
+        db.client.admin.command('ping')
+        logging.info("Database: Connected successfully.")
+    except Exception as e:
+        logging.warning(f"Database: Connection not ready yet: {e}")
+        return
 
     # Initialize Office State
     if db.state.count_documents({}) == 0:
