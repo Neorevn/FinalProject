@@ -31,13 +31,28 @@ FInalProject/
 ### Prerequisites
 Ensure you have the following tools installed:
 
-*   **AWS CLI**: [Install Guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-    *   Run `aws configure` to set up your credentials.
-*   **Terraform**: Install Guide
-*   **kubectl**: Install Guide
-*   **Helm**: Install Guide
+*   **Docker Desktop** (Required for running Jenkins locally)
+*   **AWS CLI** (Run `aws configure` after installation)
+*   **Terraform**
+*   **kubectl**
+*   **Helm**
 
-**Quick Install (Windows via Chocolatey):**
+**Setup Jenkins:**
+```bash
+docker run -u root --rm -d -p 8080:8080 -p 50000:50000 -v jenkins-data:/var/jenkins_home -v /var/run/docker.sock:/var/run/docker.sock --name jenkins jenkins/jenkins:lts-jdk17
+```
+Get password: docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+Go to http://localhost:8080, paste password, and install "Suggested plugins". +3. Install Extra Plugins:
+Manage Jenkins > Plugins > Available: Docker Pipeline, Kubernetes CLI, AWS Credentials. +4. Configure Credentials:
+Manage Jenkins > Credentials > System > Global credentials > Add Credentials:
+   *   **`aws-creds`**: *AWS Credentials* (Access Key ID & Secret Access Key).
+   *   **`docker-hub-creds`**: *Username with password* (DockerHub Login).
+   *   **`kubeconfig-creds`**: *Secret file* (Upload `~/.kube/config` generated in Step 2).
+   *   **`mongo-uri`**: *Secret text* (Value: `mongodb://office-db-0.office-db-headless:27017/officedb`).
+   *   **`flask-secret-key`**: *Secret text* (Value: `supersecretkey`).
+   *   **`discord-webhook-url`**: *Secret text* (Your Discord Webhook URL).
+
+**Quick Install (Windows):**
 ```bash
 choco install awscli terraform kubernetes-cli kubernetes-helm
 ```
@@ -46,6 +61,7 @@ choco install awscli terraform kubernetes-cli kubernetes-helm
 ```bash
 brew install awscli terraform kubectl helm
 ```
+
 
 ### 1. Provision Infrastructure
 Create the VPC and EKS Cluster using Terraform.
