@@ -40,6 +40,19 @@ pipeline {
             }
         }
         
+        stage('Security Scan') {
+            when {
+                anyOf {
+                    changeset "backend-api/**"
+                    changeset "devops-infra/kubernetes/backend/**"
+                    changeset "devops-infra/jenkins/Jenkinsfile.backend"
+                }
+            }
+            steps {
+                sh "trivy image --severity HIGH,CRITICAL --exit-code 0 --no-progress ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+            }
+        }
+        
         stage('Push Docker Image') {
             when {
                 anyOf {
