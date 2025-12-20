@@ -1,3 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+data:
+  prometheus.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        uid: prometheus
+        url: http://prometheus:9090
+        access: proxy
+        isDefault: true
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -17,10 +32,18 @@ spec:
           image: grafana/grafana:latest
           ports:
             - containerPort: 3000
+          volumeMounts:
+            - name: grafana-datasources
+              mountPath: /etc/grafana/provisioning/datasources/prometheus.yaml
+              subPath: prometheus.yaml
           resources:
             requests:
               memory: "128Mi"
               cpu: "100m"
+      volumes:
+        - name: grafana-datasources
+          configMap:
+            name: grafana-datasources
 ---
 apiVersion: v1
 kind: Service
