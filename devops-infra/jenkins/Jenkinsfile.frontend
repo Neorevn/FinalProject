@@ -33,8 +33,9 @@ pipeline {
                 }
             }
             steps {
-                // Run unit tests in a temporary container
-                sh "docker run --rm -v ${WORKSPACE}/frontend-app:/app -w /app node:18-alpine sh -c 'npm install && npm run test'"
+                // Build a test image targeting the builder stage and run tests
+                sh "docker build --target builder -t frontend-test:${env.BUILD_NUMBER} ./frontend-app"
+                sh "docker run --rm frontend-test:${env.BUILD_NUMBER} npm run test"
             }
         }
         
