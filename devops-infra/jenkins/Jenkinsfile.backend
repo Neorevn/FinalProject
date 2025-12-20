@@ -25,6 +25,19 @@ pipeline {
             }
         }
         
+        stage('Test') {
+            when {
+                anyOf {
+                    changeset "backend-api/**"
+                    changeset "devops-infra/jenkins/Jenkinsfile.backend"
+                }
+            }
+            steps {
+                // Run unit tests in a temporary container
+                sh "docker run --rm -v ${WORKSPACE}/backend-api:/app -w /app python:3.11-slim sh -c 'pip install -r requirements.txt && pytest'"
+            }
+        }
+        
         stage('Build Docker Image') {
             when {
                 anyOf {

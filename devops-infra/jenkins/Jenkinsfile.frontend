@@ -25,6 +25,19 @@ pipeline {
             }
         }
         
+        stage('Test') {
+            when {
+                anyOf {
+                    changeset "frontend-app/**"
+                    changeset "devops-infra/jenkins/Jenkinsfile.frontend"
+                }
+            }
+            steps {
+                // Run unit tests in a temporary container
+                sh "docker run --rm -v ${WORKSPACE}/frontend-app:/app -w /app node:18-alpine sh -c 'npm install && npm run test'"
+            }
+        }
+        
         stage('Build Docker Image') {
             when {
                 anyOf {

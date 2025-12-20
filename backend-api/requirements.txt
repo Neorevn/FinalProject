@@ -6,3 +6,4 @@ APScheduler
 pyJWT
 gunicorn
 prometheus-client
+pytest
