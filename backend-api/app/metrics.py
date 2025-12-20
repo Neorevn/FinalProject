@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from prometheus_client import generate_latest, Counter, Histogram, Gauge, multiprocess
+from prometheus_client import generate_latest, Counter, Histogram, Gauge, multiprocess, CollectorRegistry
 import time
 import os
 
@@ -16,16 +16,13 @@ HTTP_REQUESTS_IN_PROGRESS = Gauge(
     'http_requests_in_progress', 'HTTP Requests In Progress', ['method', 'endpoint']
 )
 
-# Configure multiprocess mode for Gunicorn
-if 'PROMETHEUS_MULTIPROC_DIR' in os.environ:
-    try:
-        multiprocess.MultiProcessCollector(os.environ['PROMETHEUS_MULTIPROC_DIR'])
-    except ValueError:
-        pass # Directory might not exist yet or already configured
-
 @metrics_bp.route('/metrics', methods=['GET'])
 def prometheus_metrics():
     """Exposes Prometheus metrics."""
+    if 'PROMETHEUS_MULTIPROC_DIR' in os.environ:
+        registry = CollectorRegistry()
+        multiprocess.MultiProcessCollector(registry)
+        return generate_latest(registry), 200, {'Content-Type': 'text/plain; version=0.0.4; charset=utf-8'}
     return generate_latest(), 200, {'Content-Type': 'text/plain; version=0.0.4; charset=utf-8'}
 
 def before_request_hook():

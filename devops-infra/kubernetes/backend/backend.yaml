@@ -35,7 +35,7 @@ spec:
               value: "/tmp"
           resources:
             requests:
-              memory: "64Mi"
+              memory: "128Mi"
               cpu: "50m"
           readinessProbe:
             httpGet:
