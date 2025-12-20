@@ -26,6 +26,13 @@ pipeline {
         }
         
         stage('Build Docker Image') {
+            when {
+                anyOf {
+                    changeset "frontend-app/**"
+                    changeset "devops-infra/kubernetes/frontend/**"
+                    changeset "devops-infra/jenkins/Jenkinsfile.frontend"
+                }
+            }
             steps {
                 script {
                     // We pass the build-arg so Nginx knows where to proxy API calls
@@ -35,6 +42,13 @@ pipeline {
         }
         
         stage('Push Docker Image') {
+            when {
+                anyOf {
+                    changeset "frontend-app/**"
+                    changeset "devops-infra/kubernetes/frontend/**"
+                    changeset "devops-infra/jenkins/Jenkinsfile.frontend"
+                }
+            }
             steps {
                 script {
                     docker.withRegistry('', DOCKER_CREDENTIALS_ID) {
@@ -46,6 +60,13 @@ pipeline {
         }
         
         stage('Deploy to K8s') {
+            when {
+                anyOf {
+                    changeset "frontend-app/**"
+                    changeset "devops-infra/kubernetes/frontend/**"
+                    changeset "devops-infra/jenkins/Jenkinsfile.frontend"
+                }
+            }
             steps {
                 withCredentials([aws(credentialsId: AWS_CREDENTIALS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     withEnv(['AWS_DEFAULT_REGION=us-east-1']) {

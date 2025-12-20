@@ -26,6 +26,13 @@ pipeline {
         }
         
         stage('Build Docker Image') {
+            when {
+                anyOf {
+                    changeset "backend-api/**"
+                    changeset "devops-infra/kubernetes/backend/**"
+                    changeset "devops-infra/jenkins/Jenkinsfile.backend"
+                }
+            }
             steps {
                 script {
                     dockerImage = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}", "./backend-api")
@@ -34,6 +41,13 @@ pipeline {
         }
         
         stage('Push Docker Image') {
+            when {
+                anyOf {
+                    changeset "backend-api/**"
+                    changeset "devops-infra/kubernetes/backend/**"
+                    changeset "devops-infra/jenkins/Jenkinsfile.backend"
+                }
+            }
             steps {
                 script {
                     docker.withRegistry('', DOCKER_CREDENTIALS_ID) {
@@ -45,6 +59,13 @@ pipeline {
         }
         
         stage('Deploy to K8s') {
+            when {
+                anyOf {
+                    changeset "backend-api/**"
+                    changeset "devops-infra/kubernetes/backend/**"
+                    changeset "devops-infra/jenkins/Jenkinsfile.backend"
+                }
+            }
             steps {
                 withCredentials([
                     aws(credentialsId: AWS_CREDENTIALS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'),
