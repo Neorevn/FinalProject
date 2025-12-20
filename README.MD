@@ -2,15 +2,40 @@
 
 A complete, production-ready DevOps implementation for a full-stack web application. This project demonstrates Infrastructure as Code (IaC), Containerization, Orchestration, CI/CD, and Monitoring on AWS.
 
-## 🏗️ Architecture
+<p align="center">
+  <img src="https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB" alt="React">
+  <img src="https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white" alt="Flask">
+  <img src="https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB">
+  <img src="https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/badge/kubernetes-%23326ce5.svg?style=for-the-badge&logo=kubernetes&logoColor=white" alt="Kubernetes">
+  <img src="https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white" alt="AWS">
+  <img src="https://img.shields.io/badge/terraform-%235835CC.svg?style=for-the-badge&logo=terraform&logoColor=white" alt="Terraform">
+  <img src="https://img.shields.io/badge/jenkins-%232C5263.svg?style=for-the-badge&logo=jenkins&logoColor=white" alt="Jenkins">
+  <img src="https://img.shields.io/badge/HELM-%230F1689.svg?style=for-the-badge&logo=helm&logoColor=white" alt="Helm">
+  <img src="https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=Prometheus&logoColor=white" alt="Prometheus">
+  <img src="https://img.shields.io/badge/grafana-%23F46800.svg?style=for-the-badge&logo=grafana&logoColor=white" alt="Grafana">
+  <img src="https://img.shields.io/badge/nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white" alt="Nginx">
+</p>
 
-*   **Frontend**: React.js (served via Nginx)
-*   **Backend**: Flask API (Gunicorn)
-*   **Database**: MongoDB (StatefulSet)
-*   **Infrastructure**: AWS EKS, VPC, IAM (Terraform)
-*   **Orchestration**: Kubernetes (Helm & Manifests)
-*   **CI/CD**: Jenkins (Build, Test, Scan, Push, Deploy)
-*   **Monitoring**: Prometheus & Grafana
+##  Application Overview
+The **Office Management System** is a 3-tier web application designed to demonstrate a complete DevOps lifecycle. It simulates an internal enterprise tool for managing office resources.
+
+**Key Features:**
+*   **Interactive UI**: A React-based frontend for viewing and managing inventory.
+*   **REST API**: A Python Flask backend handling business logic and data processing.
+*   **Data Persistence**: MongoDB storage for reliable data retention.
+*   **Observability**: Built-in health checks and metrics for monitoring system status.
+
+## 🏗️ Architecture & Design
+The system follows a microservices-oriented design, decoupling the user interface from the data layer to allow independent scaling and deployment.
+
+*   **Frontend (React.js)**: A Single Page Application (SPA) served via **Nginx**. It consumes the backend API to render dynamic content.
+*   **Backend (Flask)**: A lightweight Python API running on **Gunicorn**. It processes requests and interacts with the database.
+*   **Database (MongoDB)**: A NoSQL document store deployed as a **StatefulSet** to ensure data persistence across pod restarts.
+*   **Infrastructure**: AWS EKS (Elastic Kubernetes Service), VPC, and IAM roles provisioned via **Terraform**.
+*   **Orchestration**: Kubernetes manages the container lifecycle, configured via **Helm Charts** and manifests.
+*   **CI/CD**: **Jenkins** automates the pipeline: Build -> Test -> Scan -> Push -> Deploy.
+*   **Monitoring**: **Prometheus** scrapes metrics from the application, while **Grafana** visualizes system health.
 
 ## 📂 Repository Structure
 
