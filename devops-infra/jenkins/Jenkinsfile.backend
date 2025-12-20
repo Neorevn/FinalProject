@@ -35,7 +35,7 @@ pipeline {
             steps {
                 // Build a test image and run tests inside it to avoid volume mount issues
                 sh "docker build -t backend-test:${env.BUILD_NUMBER} ./backend-api"
-                sh "docker run --rm backend-test:${env.BUILD_NUMBER} pytest tests/"
+                sh "docker run --rm -e MONGO_URI='mongodb://mock:27017/db' -e SECRET_KEY='test_secret' backend-test:${env.BUILD_NUMBER} pytest tests/"
             }
         }
         
