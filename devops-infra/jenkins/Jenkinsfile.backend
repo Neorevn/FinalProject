@@ -112,8 +112,10 @@ pipeline {
                 withCredentials([aws(credentialsId: AWS_CREDENTIALS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     withEnv(['AWS_DEFAULT_REGION=us-east-1']) {
                         withKubeConfig([credentialsId: KUBECONFIG_CREDENTIALS_ID]) {
-                            // Run a temporary pod to curl the health endpoint
-                            sh "kubectl run curl-test-backend-${env.BUILD_NUMBER} --image=curlimages/curl --restart=Never --rm -- --fail --connect-timeout 10 --max-time 20 http://office-backend:5000/health"
+                            script {
+                                def podName = sh(script: "kubectl get pods -l app=office-backend --field-selector=status.phase=Running -o jsonpath='{.items[0].metadata.name}'", returnStdout: true).trim()
+                                sh "kubectl exec ${podName} -- python -c \"import urllib.request; print(urllib.request.urlopen('http://localhost:5000/health').read().decode('utf-8'))\""
+                            }
                         }
                     }
                 }
