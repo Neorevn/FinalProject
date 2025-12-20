@@ -113,7 +113,7 @@ pipeline {
                     withEnv(['AWS_DEFAULT_REGION=us-east-1']) {
                         withKubeConfig([credentialsId: KUBECONFIG_CREDENTIALS_ID]) {
                             // Run a temporary pod to curl the health endpoint
-                            sh "kubectl run curl-test-backend-${env.BUILD_NUMBER} --image=curlimages/curl --restart=Never --rm -i -- --fail --connect-timeout 5 --max-time 10 http://office-backend:5000/health"
+                            sh "kubectl run curl-test-backend-${env.BUILD_NUMBER} --image=curlimages/curl --restart=Never --rm -- --fail --connect-timeout 10 --max-time 20 http://office-backend:5000/health"
                         }
                     }
                 }
