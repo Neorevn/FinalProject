@@ -1,0 +1,12 @@
+Check for duplicate files leftovers from on-prem version
+
+Check parking spots not in numerical order
+
+Check logo before logging
+
+Check overall security
+
+Check for mockup placeholders in Wellness Tab
+
+Incoporate soothing music (?)
+
