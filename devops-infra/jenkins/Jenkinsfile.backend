@@ -21,7 +21,12 @@ pipeline {
         }
 
         stage('Build Backend') {
-            when { changeset "backend-api/**" }
+            when {
+                anyOf {
+                    changeset "backend-api/**"
+                    changeset "devops-infra/jenkins/Jenkinsfile.backend"
+                }
+            }
             steps {
                 script {
                     env.SHOULD_BUILD = 'true'
