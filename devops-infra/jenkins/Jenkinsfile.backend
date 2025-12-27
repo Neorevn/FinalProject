@@ -23,6 +23,9 @@ pipeline {
         stage('Build Backend') {
             when { changeset "backend-api/**" }
             steps {
+                script {
+                    env.SHOULD_BUILD = 'true'
+                }
                 dir('backend-api') {
                     script {
                         echo "Changes detected in backend-api. Building..."
@@ -40,6 +43,7 @@ pipeline {
     post {
         success {
             script {
+                if (env.SHOULD_BUILD == 'true') {
                 def payload = """{
                     "embeds": [{
                         "title": "Backend Build: Job Done",
@@ -50,10 +54,12 @@ pipeline {
                 }"""
                 writeFile file: 'discord_payload.json', text: payload
                 sh "curl -H 'Content-Type: application/json' -d @discord_payload.json \$DISCORD_WEBHOOK"
+                }
             }
         }
         failure {
             script {
+                if (env.SHOULD_BUILD == 'true') {
                 def payload = """{
                     "embeds": [{
                         "title": "Backend Build: Kill self initiated",
@@ -64,6 +70,7 @@ pipeline {
                 }"""
                 writeFile file: 'discord_payload.json', text: payload
                 sh "curl -H 'Content-Type: application/json' -d @discord_payload.json \$DISCORD_WEBHOOK"
+                }
             }
         }
     }

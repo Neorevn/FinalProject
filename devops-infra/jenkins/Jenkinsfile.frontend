@@ -23,6 +23,9 @@ pipeline {
         stage('Build Frontend') {
             when { changeset "frontend-app/**" }
             steps {
+                script {
+                    env.SHOULD_BUILD = 'true'
+                }
                 dir('frontend-app') {
                     script {
                         echo "Changes detected in frontend-app. Building..."
@@ -40,6 +43,7 @@ pipeline {
     post {
         always {
             script {
+                if (env.SHOULD_BUILD == 'true') {
                 def result = currentBuild.currentResult
                 def message = result == 'SUCCESS' ? 'Job Done' : 'Kill self initiated'
                 def color = result == 'SUCCESS' ? '3066993' : '15158332'
@@ -53,6 +57,7 @@ pipeline {
                 }"""
                 writeFile file: 'discord_payload.json', text: payload
                 sh "curl -H 'Content-Type: application/json' -d @discord_payload.json $DISCORD_WEBHOOK"
+                }
             }
         }
     }
