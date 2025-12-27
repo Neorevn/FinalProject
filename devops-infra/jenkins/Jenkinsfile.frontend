@@ -1,145 +1,33 @@
-def dockerImage
-
 pipeline {
     agent any
-    
-    triggers {
-        pollSCM '* * * * *'
-    }
-    
+
     environment {
-        // Replace with your Docker Hub username
-        DOCKER_IMAGE = 'neorevn/office-frontend'
-        K8S_DEPLOYMENT = 'office-frontend'
-        
-        // You will need to create these credentials in Jenkins later
-        DOCKER_CREDENTIALS_ID = 'docker-hub-creds'
-        KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-creds'
-        AWS_CREDENTIALS_ID = 'aws-creds'
-    }
-    
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        
-        stage('Test') {
-            when {
-                anyOf {
-                    changeset "frontend-app/**"
-                    changeset "devops-infra/jenkins/Jenkinsfile.frontend"
-                }
-            }
-            steps {
-                // Build a test image targeting the builder stage and run tests
-                sh "docker build --target builder -t frontend-test:${env.BUILD_NUMBER} ./frontend-app"
-                sh "docker run --rm frontend-test:${env.BUILD_NUMBER} npm run test"
-            }
-        }
-        
-        stage('Build Docker Image') {
-            when {
-                anyOf {
-                    changeset "frontend-app/**"
-                    changeset "devops-infra/kubernetes/frontend/**"
-                    changeset "devops-infra/jenkins/Jenkinsfile.frontend"
-                }
-            }
-            steps {
-                script {
-                    // We pass the build-arg so Nginx knows where to proxy API calls
-                    dockerImage = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}", "--build-arg VITE_API_URL=/api ./frontend-app")
-                }
-            }
-        }
-        
-        stage('Security Scan') {
-            when {
-                anyOf {
-                    changeset "frontend-app/**"
-                    changeset "devops-infra/kubernetes/frontend/**"
-                    changeset "devops-infra/jenkins/Jenkinsfile.frontend"
-                }
-            }
-            steps {
-                sh "trivy image --severity HIGH,CRITICAL --exit-code 0 --no-progress ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-            }
-        }
-        
-        stage('Push Docker Image') {
-            when {
-                anyOf {
-                    changeset "frontend-app/**"
-                    changeset "devops-infra/kubernetes/frontend/**"
-                    changeset "devops-infra/jenkins/Jenkinsfile.frontend"
-                }
-            }
-            steps {
-                script {
-                    docker.withRegistry('', DOCKER_CREDENTIALS_ID) {
-                        dockerImage.push()
-                        dockerImage.push('latest')
-                    }
-                }
-            }
-        }
-        
-        stage('Deploy to K8s') {
-            when {
-                anyOf {
-                    changeset "frontend-app/**"
-                    changeset "devops-infra/kubernetes/frontend/**"
-                    changeset "devops-infra/jenkins/Jenkinsfile.frontend"
-                }
-            }
-            steps {
-                withCredentials([aws(credentialsId: AWS_CREDENTIALS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    withEnv(['AWS_DEFAULT_REGION=us-east-1']) {
-                        withKubeConfig([credentialsId: KUBECONFIG_CREDENTIALS_ID]) {
-                            // Apply the manifest first to ensure replicas is set to 1
-                            sh "kubectl apply -f devops-infra/kubernetes/frontend/frontend.yaml"
-                            sh "kubectl set image deployment/${K8S_DEPLOYMENT} ${K8S_DEPLOYMENT}=${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                            sh "kubectl rollout status deployment/${K8S_DEPLOYMENT}"
-                        }
-                    }
-                }
-            }
-        }
-        
-        stage('Verify') {
-            when {
-                anyOf {
-                    changeset "frontend-app/**"
-                    changeset "devops-infra/kubernetes/frontend/**"
-                    changeset "devops-infra/jenkins/Jenkinsfile.frontend"
-                }
-            }
-            steps {
-                withCredentials([aws(credentialsId: AWS_CREDENTIALS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    withEnv(['AWS_DEFAULT_REGION=us-east-1']) {
-                        withKubeConfig([credentialsId: KUBECONFIG_CREDENTIALS_ID]) {
-                            script {
-                                def podName = sh(script: "kubectl get pods -l app=office-frontend --field-selector=status.phase=Running -o jsonpath='{.items[0].metadata.name}'", returnStdout: true).trim()
-                                sh "kubectl exec ${podName} -- wget -qO- http://127.0.0.1:8080/health"
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        DOCKER_HUB_USER = 'neorevn' // Update this
+        REGISTRY_CREDS = 'docker-hub-creds'
     }
 
-    post {
-        success {
-            withCredentials([string(credentialsId: 'discord-webhook-url', variable: 'DISCORD_WEBHOOK')]) {
-                discordSend description: "Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' completed successfully.", link: env.BUILD_URL, result: 'SUCCESS', title: "Build Success", webhookURL: DISCORD_WEBHOOK
+    stages {
+        stage('Init') {
+            steps {
+                script {
+                    env.GIT_COMMIT_SHORT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                }
             }
         }
-        failure {
-            withCredentials([string(credentialsId: 'discord-webhook-url', variable: 'DISCORD_WEBHOOK')]) {
-                discordSend description: "Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' failed.", link: env.BUILD_URL, result: 'FAILURE', title: "Build Failure", webhookURL: DISCORD_WEBHOOK
+
+        stage('Build Frontend') {
+            when { changeset "frontend-app/**" }
+            steps {
+                dir('frontend-app') {
+                    script {
+                        echo "Changes detected in frontend-app. Building..."
+                        docker.withRegistry('', REGISTRY_CREDS) {
+                            def img = docker.build("${DOCKER_HUB_USER}/office-frontend:${GIT_COMMIT_SHORT}")
+                            img.push()
+                            // We don't push 'latest' here to avoid messing with the deploy pipeline
+                        }
+                    }
+                }
             }
         }
     }

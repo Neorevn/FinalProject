@@ -1,3 +1,4 @@
+// This is the Master Deployment Pipeline (office-deploy)
 pipeline {
     agent any
 
@@ -8,6 +9,7 @@ pipeline {
         // Jenkins Credentials IDs
         REGISTRY_CREDS = 'docker-hub-creds'
         KUBECONFIG_CREDS = 'kubeconfig-creds'
+        AWS_CREDS = 'aws-creds'
         
         // Application Secrets
         MONGO_URI = credentials('mongo-uri')
@@ -24,8 +26,12 @@ pipeline {
         }
 
         stage('Setup Secrets') {
+            // Always run secrets setup to ensure consistency
             steps {
-                withCredentials([file(credentialsId: KUBECONFIG_CREDS, variable: 'KUBECONFIG')]) {
+                withCredentials([
+                    file(credentialsId: KUBECONFIG_CREDS, variable: 'KUBECONFIG'),
+                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: AWS_CREDS]
+                ]) {
                     sh '''
                     # Create secrets in the cluster (Idempotent-ish)
                     kubectl delete secret office-backend-secrets --ignore-not-found
@@ -38,6 +44,7 @@ pipeline {
         }
 
         stage('Build & Deploy Backend') {
+            // Run if backend OR infra changes, or if it's the first run (no changeset logic for safety in deploy)
             steps {
                 // Build
                 dir('backend-api') {
@@ -50,7 +57,10 @@ pipeline {
                     }
                 }
                 // Deploy
-                withCredentials([file(credentialsId: KUBECONFIG_CREDS, variable: 'KUBECONFIG')]) {
+                withCredentials([
+                    file(credentialsId: KUBECONFIG_CREDS, variable: 'KUBECONFIG'),
+                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: AWS_CREDS]
+                ]) {
                     dir('devops-infra/helm/backend') {
                         sh "helm upgrade --install office-backend . --set image.repository=${DOCKER_HUB_USER}/office-backend --set image.tag=${GIT_COMMIT_SHORT}"
                     }
@@ -59,6 +69,7 @@ pipeline {
         }
 
         stage('Build & Deploy Frontend') {
+            // Run if frontend OR infra changes
             steps {
                 // Build
                 dir('frontend-app') {
@@ -71,7 +82,10 @@ pipeline {
                     }
                 }
                 // Deploy
-                withCredentials([file(credentialsId: KUBECONFIG_CREDS, variable: 'KUBECONFIG')]) {
+                withCredentials([
+                    file(credentialsId: KUBECONFIG_CREDS, variable: 'KUBECONFIG'),
+                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: AWS_CREDS]
+                ]) {
                     dir('devops-infra/helm/frontend') {
                         sh "helm upgrade --install office-frontend . --set image.repository=${DOCKER_HUB_USER}/office-frontend --set image.tag=${GIT_COMMIT_SHORT}"
                     }

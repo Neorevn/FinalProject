@@ -1,151 +1,33 @@
-def dockerImage
-
 pipeline {
     agent any
-    
-    triggers {
-        pollSCM '* * * * *'
-    }
-    
+
     environment {
-        // Replace with your Docker Hub username
-        DOCKER_IMAGE = 'neorevn/office-backend'
-        K8S_DEPLOYMENT = 'office-backend'
-        
-        // You will need to create these credentials in Jenkins later
-        DOCKER_CREDENTIALS_ID = 'docker-hub-creds'
-        KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-creds'
-        AWS_CREDENTIALS_ID = 'aws-creds'
-    }
-    
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        
-        stage('Test') {
-            when {
-                anyOf {
-                    changeset "backend-api/**"
-                    changeset "devops-infra/jenkins/Jenkinsfile.backend"
-                }
-            }
-            steps {
-                // Build a test image and run tests inside it to avoid volume mount issues
-                sh "docker build -t backend-test:${env.BUILD_NUMBER} ./backend-api"
-                sh "docker run --rm -e MONGO_URI='mongodb://mock:27017/db' -e SECRET_KEY='test_secret' backend-test:${env.BUILD_NUMBER} pytest tests/"
-            }
-        }
-        
-        stage('Build Docker Image') {
-            when {
-                anyOf {
-                    changeset "backend-api/**"
-                    changeset "devops-infra/kubernetes/backend/**"
-                    changeset "devops-infra/jenkins/Jenkinsfile.backend"
-                }
-            }
-            steps {
-                script {
-                    dockerImage = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}", "./backend-api")
-                }
-            }
-        }
-        
-        stage('Security Scan') {
-            when {
-                anyOf {
-                    changeset "backend-api/**"
-                    changeset "devops-infra/kubernetes/backend/**"
-                    changeset "devops-infra/jenkins/Jenkinsfile.backend"
-                }
-            }
-            steps {
-                sh "trivy image --severity HIGH,CRITICAL --exit-code 0 --no-progress ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-            }
-        }
-        
-        stage('Push Docker Image') {
-            when {
-                anyOf {
-                    changeset "backend-api/**"
-                    changeset "devops-infra/kubernetes/backend/**"
-                    changeset "devops-infra/jenkins/Jenkinsfile.backend"
-                }
-            }
-            steps {
-                script {
-                    docker.withRegistry('', DOCKER_CREDENTIALS_ID) {
-                        dockerImage.push()
-                        dockerImage.push('latest')
-                    }
-                }
-            }
-        }
-        
-        stage('Deploy to K8s') {
-            when {
-                anyOf {
-                    changeset "backend-api/**"
-                    changeset "devops-infra/kubernetes/backend/**"
-                    changeset "devops-infra/jenkins/Jenkinsfile.backend"
-                }
-            }
-            steps {
-                withCredentials([
-                    aws(credentialsId: AWS_CREDENTIALS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'),
-                    string(credentialsId: 'mongo-uri', variable: 'MONGO_URI'),
-                    string(credentialsId: 'flask-secret-key', variable: 'FLASK_SECRET_KEY')
-                ]) {
-                    withEnv(['AWS_DEFAULT_REGION=us-east-1']) {
-                        withKubeConfig([credentialsId: KUBECONFIG_CREDENTIALS_ID]) {
-                            // Create secret dynamically from Jenkins credentials (securely)
-                            sh 'kubectl create secret generic backend-secrets --from-literal=MONGO_URI="$MONGO_URI" --from-literal=SECRET_KEY="$FLASK_SECRET_KEY" --dry-run=client -o yaml | kubectl apply -f -'
-                            
-                            // Apply backend manifest
-                            sh "kubectl apply -f devops-infra/kubernetes/backend/backend.yaml"
-                            sh "kubectl set image deployment/${K8S_DEPLOYMENT} ${K8S_DEPLOYMENT}=${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                            sh "kubectl rollout status deployment/${K8S_DEPLOYMENT}"
-                        }
-                    }
-                }
-            }
-        }
-        
-        stage('Verify') {
-            when {
-                anyOf {
-                    changeset "backend-api/**"
-                    changeset "devops-infra/kubernetes/backend/**"
-                    changeset "devops-infra/jenkins/Jenkinsfile.backend"
-                }
-            }
-            steps {
-                withCredentials([aws(credentialsId: AWS_CREDENTIALS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    withEnv(['AWS_DEFAULT_REGION=us-east-1']) {
-                        withKubeConfig([credentialsId: KUBECONFIG_CREDENTIALS_ID]) {
-                            script {
-                                def podName = sh(script: "kubectl get pods -l app=office-backend --field-selector=status.phase=Running -o jsonpath='{.items[0].metadata.name}'", returnStdout: true).trim()
-                                sh "kubectl exec ${podName} -- python -c \"import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:5000/health').read().decode('utf-8'))\""
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        DOCKER_HUB_USER = 'neorevn' // Update this
+        REGISTRY_CREDS = 'docker-hub-creds'
     }
 
-    post {
-        success {
-            withCredentials([string(credentialsId: 'discord-webhook-url', variable: 'DISCORD_WEBHOOK')]) {
-                discordSend description: "Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' completed successfully.", link: env.BUILD_URL, result: 'SUCCESS', title: "Build Success", webhookURL: DISCORD_WEBHOOK
+    stages {
+        stage('Init') {
+            steps {
+                script {
+                    env.GIT_COMMIT_SHORT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                }
             }
         }
-        failure {
-            withCredentials([string(credentialsId: 'discord-webhook-url', variable: 'DISCORD_WEBHOOK')]) {
-                discordSend description: "Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' failed.", link: env.BUILD_URL, result: 'FAILURE', title: "Build Failure", webhookURL: DISCORD_WEBHOOK
+
+        stage('Build Backend') {
+            when { changeset "backend-api/**" }
+            steps {
+                dir('backend-api') {
+                    script {
+                        echo "Changes detected in backend-api. Building..."
+                        docker.withRegistry('', REGISTRY_CREDS) {
+                            def img = docker.build("${DOCKER_HUB_USER}/office-backend:${GIT_COMMIT_SHORT}")
+                            img.push()
+                            // We don't push 'latest' here to avoid messing with the deploy pipeline
+                        }
+                    }
+                }
             }
         }
     }

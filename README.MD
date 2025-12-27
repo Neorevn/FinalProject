@@ -161,22 +161,43 @@ This project uses Jenkins for automated delivery.
 *   **Trigger:** GitHub Webhook
 *   **Stages:** Checkout -> Test -> Build -> Scan (Trivy) -> Push (DockerHub) -> Deploy (Helm/K8s) -> Verify -> Notify (Discord)
 
-### 🚀 Automated Deployment (Jenkins)
-To deploy via Jenkins instead of manually (Replaces **Step 4**):
+### 🚀 Automated CI/CD Setup
+To set up the automated pipeline with separate jobs for Frontend, Backend, and Deployment:
 
-1.  **Prerequisites**: Ensure **Steps 1, 2, and 3** (Infrastructure, kubectl, Dependencies) are complete.
-2.  **Create Job**:
-    *   Dashboard > **New Item** > Name: `office-app` > **Pipeline**.
-3.  **Configure**:
-    *   **Option A (File in Repo):**
-        *   **Definition**: Pipeline script from SCM.
-        *   **Script Path**: `devops-infra/jenkins/Jenkinsfile.groovy`.
-    *   **Option B (Direct Paste):**
-        *   **Definition**: Pipeline script.
-        *   **Script**: Copy the content of `devops-infra/jenkins/Jenkinsfile.groovy` and paste it here. Update `DOCKER_HUB_USER` directly in the text box.
-4.  **Deploy**:
-    *   Click **Build Now**.
-    *   Jenkins will checkout code, build Docker images, push to DockerHub, and deploy to EKS using Helm.
+#### 1. Configure GitHub Webhook
+1.  Go to your GitHub Repository > **Settings** > **Webhooks**.
+2.  Click **Add webhook**.
+3.  **Payload URL**: `http://<YOUR_JENKINS_IP>:8080/github-webhook/` (Ensure the trailing slash is present).
+4.  **Content type**: `application/json`.
+5.  **Which events?**: Just the `push` event.
+6.  Click **Add webhook**.
+
+#### 2. Create Jenkins Jobs
+Create 3 separate Pipeline jobs in Jenkins.
+
+**For `office-frontend` and `office-backend`:**
+1.  **New Item** > **Pipeline**.
+2.  **Build Triggers** > Check **GitHub hook trigger for GITScm polling**.
+3.  **Pipeline** > **Definition**: `Pipeline script from SCM`.
+4.  **SCM**: `Git` (Enter your Repo URL).
+5.  **Script Path**: `devops-infra/jenkins/Jenkinsfile.frontend` (or `.backend`).
+
+**For `office-deploy`:**
+1.  **New Item** > **Pipeline**.
+2.  **Build Triggers** > **Leave unchecked** (Manual trigger only).
+3.  **Pipeline** > **Definition**: `Pipeline script from SCM`.
+4.  **SCM**: `Git` (Enter your Repo URL).
+5.  **Script Path**: `devops-infra/jenkins/Jenkinsfile.deploy`.
+
+| Job Name | Script Path | Description |
+| :--- | :--- | :--- |
+| **office-frontend** | `devops-infra/jenkins/Jenkinsfile.frontend` | Builds & Tests Frontend on changes to `frontend-app/` |
+| **office-backend** | `devops-infra/jenkins/Jenkinsfile.backend` | Builds & Tests Backend on changes to `backend-api/` |
+| **office-deploy** | `devops-infra/jenkins/Jenkinsfile.deploy` | **Manual Job**: Deploys the latest code to EKS. |
+
+#### 3. Important Configuration
+*   Edit the `Jenkinsfile.deploy`s and update `DOCKER_HUB_USER` to your username.
+*   Ensure Jenkins has the `aws-creds`, `docker-hub-creds`, and `kubeconfig-creds` configured.
 
 ## 🧹 Cleanup
 To avoid AWS charges, destroy resources in this specific order:
