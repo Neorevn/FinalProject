@@ -9,3 +9,11 @@
 [x] Check for mockup placeholders in Wellness Tab
 
 Incoporate soothing music (?)
+
+Incoporate an employee time clock
+
+Intergrate officer app with google drive
+
+Create a live chat for employees
+
+Have the whole frontend be dynamic to fit mobile and PC
