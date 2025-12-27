@@ -38,8 +38,8 @@ The system follows a microservices-oriented design, decoupling the user interfac
 *   **Database (MongoDB)**: Uses **MongoDB Atlas** (External) for production-grade, cloud-managed data persistence.
 *   **Infrastructure**: AWS EKS (Elastic Kubernetes Service), VPC, and IAM roles provisioned via **Terraform**.
 *   **Orchestration**: Kubernetes manages the container lifecycle, configured via **Helm Charts** and manifests.
-*   **CI/CD**: **Jenkins** automates the pipeline: Build -> Test -> Scan -> Push -> Deploy.
-*   **Monitoring**: **Prometheus** scrapes metrics from the application, while **Grafana** visualizes system health.
+*   **CI/CD**: **Jenkins** automates the entire pipeline: Build -> Push to DockerHub -> Deploy to Kubernetes via Helm.
+*   **Monitoring**: **Prometheus** scrapes metrics from the cluster, while **Grafana** visualizes system health.
 
 ## 📂 Repository Structure
 
@@ -49,7 +49,7 @@ FInalProject/
 ├── frontend-app/      # React Application & Dockerfile
 ├── devops-infra/      # Infrastructure & Deployment Config
 │   ├── helm/          # Helm Charts (Frontend & Backend)
-│   ├── jenkins/       # CI/CD Pipelines
+│   ├── jenkins/       # CI/CD Pipeline Definitions
 │   ├── kubernetes/    # K8s Manifests (DB, Monitoring)
 │   └── terraform/     # IaC for AWS EKS
 └── README.MD          # Documentation
@@ -85,8 +85,8 @@ Manage Jenkins > Credentials > System > Global credentials > Add Credentials:
    *   **`aws-creds`**: *AWS Credentials* (Access Key ID & Secret Access Key).
    *   **`docker-hub-creds`**: *Username with password* (DockerHub Login).
    *   **`kubeconfig-creds`**: *Secret file* (Upload `~/.kube/config` generated in Step 2).
-   *   **`mongo-uri`**: *Secret text* (Value: Your MongoDB Atlas Connection String).
-   *   **`flask-secret-key`**: *Secret text* (Value: `supersecretkey`).
+   *   **`mongo-uri`**: *Secret text* (Your MongoDB Atlas Connection String).
+   *   **`flask-secret-key`**: *Secret text* (A strong random string, e.g., `openssl rand -hex 32`).
    *   **`discord-webhook-url`**: *Secret text* (Your Discord Webhook URL).
 
 **Quick Install (Windows):**
@@ -117,7 +117,7 @@ aws eks update-kubeconfig --region us-east-1 --name office-app-dev-cluster
 ```
 
 ### 3. Deploy Dependencies
-Deploy the Monitoring stack using raw manifests.
+Deploy the Database and Monitoring stack using raw manifests.
 
 ```bash
 # Return to root
@@ -190,10 +190,6 @@ Create 2 separate Pipeline jobs in Jenkins.
 | **office-frontend** | `devops-infra/jenkins/Jenkinsfile.frontend` | Builds & Tests Frontend on changes to `frontend-app/` |
 | **office-backend** | `devops-infra/jenkins/Jenkinsfile.backend` | Builds & Tests Backend on changes to `backend-api/` |
 
-#### 3. Important Configuration
-*   Edit the `Jenkinsfile.deploy`s and update `DOCKER_HUB_USER` to your username.
-*   Ensure Jenkins has the `aws-creds`, `docker-hub-creds`, and `kubeconfig-creds` configured.
-
 #### 4. Troubleshooting: Triggers on Localhost
 If Jenkins is running locally (Docker Desktop), GitHub cannot send Webhooks to `localhost`.
 **Workaround:** Configure Jenkins to poll GitHub for changes.
@@ -212,6 +208,7 @@ To avoid AWS charges, destroy resources in this specific order:
     ```bash
     helm uninstall office-frontend office-backend
     kubectl delete -f devops-infra/kubernetes/monitoring/
+    kubectl delete -f devops-infra/kubernetes/database/
     ```
 
 2.  **Destroy Infrastructure:**
