@@ -9,6 +9,8 @@ pipeline {
         DOCKER_HUB_USER = 'neorevn' // Update this
         REGISTRY_CREDS = 'docker-hub-creds'
         DISCORD_WEBHOOK = credentials('discord-webhook-url')
+        KUBECONFIG_CREDS = 'kubeconfig-creds'
+        AWS_CREDS = 'aws-creds'
     }
 
     stages {
@@ -39,6 +41,13 @@ pipeline {
                             img.push("latest")
                         }
                     }
+                }
+                withCredentials([
+                    file(credentialsId: KUBECONFIG_CREDS, variable: 'KUBECONFIG'),
+                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: AWS_CREDS]
+                ]) {
+                    echo "Restarting Backend Deployment..."
+                    sh "kubectl rollout restart deployment office-backend"
                 }
             }
         }
