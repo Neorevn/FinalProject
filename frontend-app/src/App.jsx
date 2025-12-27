@@ -243,9 +243,7 @@ const ParkingPanel = ({ currentUser }) => {
 
             // Ensure spots are sorted numerically by ID (1-20)
             const sortedSpots = Array.isArray(spotsData) ? [...spotsData].sort((a, b) => {
-                const idA = parseInt(String(a.id).replace(/\D/g, ''), 10);
-                const idB = parseInt(String(b.id).replace(/\D/g, ''), 10);
-                return (isNaN(idA) ? 0 : idA) - (isNaN(idB) ? 0 : idB);
+                return String(a.id).localeCompare(String(b.id), undefined, { numeric: true, sensitivity: 'base' });
             }) : [];
             setSpots(sortedSpots);
             setMyReservations(reservationsData);
