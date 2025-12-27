@@ -243,8 +243,8 @@ const ParkingPanel = ({ currentUser }) => {
 
             // Ensure spots are sorted numerically by ID (1-20)
             const sortedSpots = Array.isArray(spotsData) ? [...spotsData].sort((a, b) => {
-                const idA = parseInt(a.id, 10);
-                const idB = parseInt(b.id, 10);
+                const idA = parseInt(String(a.id).replace(/\D/g, ''), 10);
+                const idB = parseInt(String(b.id).replace(/\D/g, ''), 10);
                 return (isNaN(idA) ? 0 : idA) - (isNaN(idB) ? 0 : idB);
             }) : [];
             setSpots(sortedSpots);
@@ -414,7 +414,7 @@ const ParkingPanel = ({ currentUser }) => {
                     <div className="relative">
                         <div className="bg-black/30 p-4 rounded-xl border border-cyan-500/30 shadow-cyan-glow" style={{ animation: 'cyan-glow-pulse 4s infinite ease-in-out' }}>
                             <h3 className="text-2xl font-semibold text-cyan-400 mb-4">My Reservations</h3>
-                            <div className="space-y-2">
+                            <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
                                 {myReservations && myReservations.length > 0 ? myReservations.map(spotId => (
                                     <div key={spotId} className="flex justify-between items-center bg-cyan-900/50 p-2 rounded-md">
                                         <span className="text-cyan-300 font-mono text-lg">Spot {spotId}</span>
@@ -424,10 +424,10 @@ const ParkingPanel = ({ currentUser }) => {
                                         </div>
                                     </div>
                                 )) : <p className="text-gray-500 text-center">No reservations found for '{currentUser.username}'.</p>}
-                                {/* Alerts are positioned absolutely below the "My Reservations" box */}
-                                {error && <div className="absolute w-full mt-2 bg-red-900/80 border border-red-500 text-red-300 px-4 py-2 rounded-lg" role="alert">{error}</div>}
-                                {message && <div className="absolute w-full mt-2 bg-green-900/80 border border-green-500 text-green-300 px-4 py-2 rounded-lg" role="alert">{message}</div>}
                             </div>
+                            {/* Alerts are positioned absolutely below the "My Reservations" box */}
+                            {error && <div className="absolute w-full mt-2 bg-red-900/80 border border-red-500 text-red-300 px-4 py-2 rounded-lg" role="alert">{error}</div>}
+                            {message && <div className="absolute w-full mt-2 bg-green-900/80 border border-green-500 text-green-300 px-4 py-2 rounded-lg" role="alert">{message}</div>}
                         </div>
                     </div>
                 </div>

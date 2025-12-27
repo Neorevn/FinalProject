@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Officer App</title>
     <style>
+      body {
+        background-color: #1a1a2e; /* Ensure body background matches theme to prevent white flash */
+        margin: 0;
+      }
       /* Inline styles to ensure splash screen renders immediately before React loads */
       #splash-screen {
         position: fixed;
@@ -19,7 +23,6 @@
         align-items: center;
         z-index: 9999;
         opacity: 1;
-        animation: fadeIn 1s ease-out backwards; /* Fade in on load */
         transition: opacity 1.5s ease-out, visibility 1.5s;
       }
       #splash-screen.hidden {
@@ -30,15 +33,16 @@
       }
       .splash-logo {
         width: 400px;
-        animation: pulse 2s infinite ease-in-out;
+        opacity: 0;
+        animation: logoFadeIn 1s ease-out forwards, pulse 2s infinite ease-in-out 1s;
+      }
+      @keyframes logoFadeIn {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
       }
       @keyframes pulse {
-        0%, 100% { transform: scale(1); opacity: 0.7; }
-        50% { transform: scale(1.1); opacity: 1; }
-      }
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.8; }
       }
     </style>
   </head>
