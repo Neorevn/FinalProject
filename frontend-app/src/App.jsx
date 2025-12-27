@@ -226,9 +226,6 @@ const ParkingPanel = ({ currentUser }) => {
     const [message, setMessage] = React.useState(null);
     const [loading, setLoading] = React.useState(true);
 
-    // Fixed: Wrapped fallback async function in parentheses to avoid compilation errors
-    const authenticatedFetch = window.authenticatedFetch || (async (url, options) => fetch(url, options));
-
     const fetchParkingData = async () => {
         try {
             const [spotsRes, reservationsRes] = await Promise.all([
@@ -241,19 +238,19 @@ const ParkingPanel = ({ currentUser }) => {
             if (!spotsRes.ok) throw new Error('Failed to fetch spots data');
             if (!reservationsRes.ok) throw new Error('Failed to fetch reservations');
 
-            let spotsData = await spotsRes.json();
+            const spotsData = await spotsRes.json();
             const reservationsData = await reservationsRes.json();
 
-            // 1. Ensure spotsData is an array (handles objects with keys as IDs)
-            const spotsArray = Array.isArray(spotsData) ? spotsData : Object.values(spotsData);
-
-            // 2. Natural Sorting logic to ensure numerical organization (e.g., 2 before 10)
-            const sortedSpots = [...spotsArray].sort((a, b) => {
-                const idA = String(a.id || '');
-                const idB = String(b.id || '');
-                return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
-            });
-
+            // Ensure spots are sorted numerically by ID (1-20)
+            const sortedSpots = Array.isArray(spotsData) ? [...spotsData].sort((a, b) => {
+                const valA = a.id;
+                const valB = b.id;
+                // Extract numbers from strings (e.g. "Spot 1" -> 1, "10" -> 10)
+                // This handles both pure numbers and strings with numbers
+                const numA = parseInt(String(valA).replace(/\D/g, ''), 10) || 0;
+                const numB = parseInt(String(valB).replace(/\D/g, ''), 10) || 0;
+                return numA - numB;
+            }) : [];
             setSpots(sortedSpots);
             setMyReservations(reservationsData);
             setError(null);
@@ -263,14 +260,8 @@ const ParkingPanel = ({ currentUser }) => {
             setLoading(false);
         }
     };
-
     React.useEffect(() => {
         fetchParkingData();
-        
-        // Listener for external state changes
-        const handleUpdate = () => fetchParkingData();
-        window.addEventListener('app-state-changed', handleUpdate);
-        return () => window.removeEventListener('app-state-changed', handleUpdate);
     }, []);
 
     const handleReserveSpot = async () => {
@@ -283,10 +274,10 @@ const ParkingPanel = ({ currentUser }) => {
             });
             const responseText = await response.text();
             if (!response.ok) throw new Error(responseText);
-            
             setMessage(responseText);
             setTimeout(() => setMessage(null), 3000);
             window.dispatchEvent(new Event('app-state-changed'));
+            await fetchParkingData();
             setSelectedSpot(null);
         } catch (e) {
             setError(`Reservation failed: ${e.message}`);
@@ -305,6 +296,7 @@ const ParkingPanel = ({ currentUser }) => {
             setMessage(responseText);
             setTimeout(() => setMessage(null), 3000);
             window.dispatchEvent(new Event('app-state-changed'));
+            await fetchParkingData();
         } catch (e) {
             setError(`Check-in failed: ${e.message}`);
             setTimeout(() => setError(null), 5000);
@@ -322,6 +314,7 @@ const ParkingPanel = ({ currentUser }) => {
             setMessage(data.message);
             setTimeout(() => setMessage(null), 3000);
             window.dispatchEvent(new Event('app-state-changed'));
+            await fetchParkingData();
         } catch (e) {
             setError(`Un-reservation failed: ${e.message}`);
             setTimeout(() => setError(null), 5000);
@@ -329,8 +322,9 @@ const ParkingPanel = ({ currentUser }) => {
     };
 
     const handleClearSpot = async (spotId) => {
-        if (!window.confirm(`Are you sure you want to clear spot ${spotId}?`)) return;
-        
+        if (!confirm(`Are you sure you want to clear spot ${spotId}? This will remove any check-in and reservation.`)) {
+            return;
+        }
         try {
             const response = await authenticatedFetch(`/api/parking/clear-spot/${spotId}`, {
                 method: 'POST',
@@ -340,6 +334,7 @@ const ParkingPanel = ({ currentUser }) => {
             setMessage(data.message);
             setTimeout(() => setMessage(null), 3000);
             window.dispatchEvent(new Event('app-state-changed'));
+            await fetchParkingData();
         } catch (e) {
             setError(`Failed to clear spot: ${e.message}`);
             setTimeout(() => setError(null), 5000);
@@ -361,9 +356,10 @@ const ParkingPanel = ({ currentUser }) => {
             textClass = 'text-green-300 text-shadow-green';
         } else if (spot.status === 'reserved') {
             spotClass = `border-fuchsia-500/50 bg-fuchsia-900/30 ${spot.user === currentUser.username ? 'ring-2 ring-fuchsia-400 shadow-[0_0_10px_#d946ef]' : ''}`;
-            icon = '📝';
+            icon = 'Reserved';
             textClass = 'text-fuchsia-300 text-shadow-fuchsia';
         } else if (spot.status === 'occupied') {
+            // Style for occupied spots
             spotClass = `border-red-500/50 bg-red-900/40 ${spot.user === currentUser.username ? 'ring-2 ring-fuchsia-400 shadow-[0_0_10px_#d946ef]' : ''}`;
             icon = '🚗';
             textClass = 'text-red-300';
@@ -381,13 +377,10 @@ const ParkingPanel = ({ currentUser }) => {
                 <div className="text-3xl">{icon}</div>
                 <div className={`font-mono text-lg mt-1 ${textClass}`}>{spot.id}</div>
                 {spot.user && (
-                    <div className="text-[10px] text-gray-400 truncate w-full px-1">{spot.user}</div>
+                    <div className="text-xs text-gray-400 truncate w-full px-1">{spot.user}</div>
                 )}
                 {(spot.status === 'occupied' || spot.status === 'reserved') && currentUser.role === 'admin' && (
-                    <button 
-                        onClick={(e) => { e.stopPropagation(); handleClearSpot(spot.id); }} 
-                        className="absolute bottom-1 right-1 bg-red-600/80 hover:bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
+                    <button onClick={(e) => { e.stopPropagation(); handleClearSpot(spot.id); }} className="absolute bottom-1 right-1 bg-red-600/80 hover:bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
                         Clear
                     </button>
                 )}
@@ -396,112 +389,53 @@ const ParkingPanel = ({ currentUser }) => {
     };
 
     if (loading) {
-        return (
-            <div className="w-full h-full flex flex-col justify-center items-center text-fuchsia-400 gap-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-fuchsia-500"></div>
-                <p className="font-mono tracking-widest uppercase">Initializing Parking Grid...</p>
-            </div>
-        );
+        return <div className="text-center p-10 text-fuchsia-400 flex justify-center items-center gap-4"><Spinner /> Loading Parking Data...</div>;
     }
 
     return (
-        <div className="w-full h-full p-4 overflow-auto">
-            <h2 className="text-3xl md:text-5xl font-bold text-fuchsia-400 mb-8 text-center">
-                Parking Management
-            </h2>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-                {/* Visual Map */}
-                <div className="lg:col-span-2 bg-black/40 p-6 rounded-2xl border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.1)]">
-                    <h3 className="text-xl font-bold text-cyan-400 mb-6 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-                        Real-Time Bay Status
-                    </h3>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+        <div className="w-full h-full relative">
+            <h2 className="text-4xl md:text-5xl font-bold text-fuchsia-400 mb-8 text-center" style={{ animation: 'text-fuchsia-glow-pulse 5s infinite ease-in-out' }}>Parking Management</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 bg-black/30 p-4 rounded-xl border border-cyan-500/30 shadow-cyan-glow" style={{ animation: 'cyan-glow-pulse 4s infinite ease-in-out' }}>
+                    <h3 className="text-2xl font-semibold text-cyan-400 mb-4 text-center" style={{ animation: 'text-cyan-glow-pulse 4s infinite ease-in-out' }}>Parking Lot Status</h3>
+                    <div className="grid grid-cols-4 md:grid-cols-5 gap-3">
                         {spots.map(spot => <Spot key={spot.id} spot={spot} />)}
                     </div>
                 </div>
-
-                {/* Controls */}
                 <div className="space-y-6">
-                    <div className="bg-black/40 p-6 rounded-2xl border border-fuchsia-500/30">
-                        <h3 className="text-xl font-bold text-fuchsia-400 mb-4">Reserve Spot</h3>
+                    <div className="bg-black/30 p-4 rounded-xl border border-fuchsia-500/30 shadow-fuchsia-glow" style={{ animation: 'fuchsia-glow-pulse 5s infinite ease-in-out' }}>
+                        <h3 className="text-2xl font-semibold text-fuchsia-400 mb-4">Reserve a Spot</h3>
                         {selectedSpot ? (
-                            <div className="space-y-4">
-                                <div className="p-4 bg-fuchsia-900/20 rounded-lg border border-fuchsia-500/20 text-center">
-                                    <p className="text-sm text-gray-400 uppercase tracking-tighter">Target Bay</p>
-                                    <p className="text-4xl font-mono font-bold text-fuchsia-300">{selectedSpot.id}</p>
-                                </div>
-                                <button 
-                                    onClick={handleReserveSpot} 
-                                    className="w-full bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-fuchsia-900/20"
-                                >
-                                    Confirm Reservation
-                                </button>
-                                <button 
-                                    onClick={() => setSelectedSpot(null)}
-                                    className="w-full text-xs text-gray-500 hover:text-gray-300 underline"
-                                >
-                                    Cancel Selection
-                                </button>
+                            <div className="text-center">
+                                <p className="text-lg">Selected Spot: <span className="font-bold text-cyan-300 text-2xl">{selectedSpot.id}</span></p>
+                                <p className="text-gray-400 mb-4">Status: <span className="capitalize">{selectedSpot.status}</span></p>
+                                <button onClick={handleReserveSpot} className="w-full bg-transparent border-2 border-fuchsia-400 text-fuchsia-400 font-bold py-2 px-6 rounded-md transition-all duration-300 hover:bg-fuchsia-400 hover:text-black hover:shadow-[0_0_15px_rgba(217,70,239,0.8)] active:scale-95">Confirm Reservation</button>
                             </div>
                         ) : (
-                            <div className="py-12 border-2 border-dashed border-gray-800 rounded-xl text-center">
-                                <p className="text-gray-600 text-sm">Select an available spot <br/> from the map to proceed</p>
-                            </div>
+                            <p className="text-gray-500 text-center py-8">Click an available spot on the map to begin.</p>
                         )}
                     </div>
-
-                    <div className="bg-black/40 p-6 rounded-2xl border border-cyan-500/30">
-                        <h3 className="text-xl font-bold text-cyan-400 mb-4">My Reservations</h3>
-                        <div className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
-                            {myReservations && myReservations.length > 0 ? myReservations.map(spotId => (
-                                <div key={spotId} className="flex flex-col gap-2 p-3 bg-cyan-900/20 rounded-xl border border-cyan-500/20">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-cyan-300 font-mono font-bold text-lg">Spot {spotId}</span>
-                                        <span className="px-2 py-0.5 rounded text-[10px] bg-cyan-500/20 text-cyan-300 uppercase">Reserved</span>
+                    <div className="relative">
+                        <div className="bg-black/30 p-4 rounded-xl border border-cyan-500/30 shadow-cyan-glow" style={{ animation: 'cyan-glow-pulse 4s infinite ease-in-out' }}>
+                            <h3 className="text-2xl font-semibold text-cyan-400 mb-4">My Reservations</h3>
+                            <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                                {myReservations && myReservations.length > 0 ? myReservations.map(spotId => (
+                                    <div key={spotId} className="flex justify-between items-center bg-cyan-900/50 p-2 rounded-md">
+                                        <span className="text-cyan-300 font-mono text-lg">Spot {spotId}</span>
+                                        <div className="flex items-center space-x-2">
+                                            <button onClick={() => handleUnreserveSpot(spotId)} className="bg-transparent border border-red-500 text-red-400 text-sm font-bold py-1 px-3 rounded-md transition-all duration-300 hover:bg-red-500 hover:text-white active:scale-95">Unreserve</button>
+                                            <button onClick={() => handleCheckIn(spotId)} className="bg-transparent border border-fuchsia-400 text-fuchsia-400 text-sm font-bold py-1 px-3 rounded-md transition-all duration-300 hover:bg-fuchsia-400 hover:text-black hover:shadow-[0_0_10px_rgba(217,70,239,0.8)] active:scale-95">Check In</button>
+                                        </div>
                                     </div>
-                                    <div className="flex gap-2 mt-2">
-                                        <button 
-                                            onClick={() => handleCheckIn(spotId)} 
-                                            className="flex-1 bg-cyan-600/80 hover:bg-cyan-500 text-white text-xs font-bold py-2 rounded-lg transition-colors"
-                                        >
-                                            Check In
-                                        </button>
-                                        <button 
-                                            onClick={() => handleUnreserveSpot(spotId)} 
-                                            className="px-3 border border-red-500/50 text-red-400 hover:bg-red-500/10 text-xs font-bold py-2 rounded-lg transition-colors"
-                                        >
-                                            Release
-                                        </button>
-                                    </div>
-                                </div>
-                            )) : (
-                                <div className="text-center py-6">
-                                    <p className="text-gray-600 text-sm italic">No active reservations</p>
-                                </div>
-                            )}
-                        </div>
-                        
-                        <div className="mt-4 min-h-[40px]">
-                            {error && <div className="bg-red-900/30 border border-red-500/50 text-red-200 text-xs p-3 rounded-lg animate-fade-in">{error}</div>}
-                            {message && <div className="bg-green-900/30 border border-green-500/50 text-green-200 text-xs p-3 rounded-lg animate-fade-in">{message}</div>}
+                                )) : <p className="text-gray-500 text-center">No reservations found for '{currentUser.username}'.</p>}
+                            </div>
+                            {/* Alerts are positioned absolutely below the "My Reservations" box */}
+                            {error && <div className="absolute w-full mt-2 bg-red-900/80 border border-red-500 text-red-300 px-4 py-2 rounded-lg" role="alert">{error}</div>}
+                            {message && <div className="absolute w-full mt-2 bg-green-900/80 border border-green-500 text-green-300 px-4 py-2 rounded-lg" role="alert">{message}</div>}
                         </div>
                     </div>
                 </div>
             </div>
-
-            <style>{`
-                @keyframes pulse-green-border {
-                    0%, 100% { border-color: rgba(74, 222, 128, 0.3); }
-                    50% { border-color: rgba(74, 222, 128, 0.8); }
-                }
-                .text-shadow-green { text-shadow: 0 0 8px rgba(74, 222, 128, 0.5); }
-                .text-shadow-fuchsia { text-shadow: 0 0 8px rgba(217, 70, 239, 0.5); }
-                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(6, 182, 212, 0.2); border-radius: 10px; }
-                @keyframes fade-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-            `}</style>
         </div>
     );
 };
