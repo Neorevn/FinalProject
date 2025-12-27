@@ -1,0 +1,92 @@
+pipeline {
+    agent any
+
+    environment {
+        // TODO: Update this with your DockerHub username
+        DOCKER_HUB_USER = 'neorevn'
+        
+        // Jenkins Credentials IDs
+        REGISTRY_CREDS = 'docker-hub-creds'
+        KUBECONFIG_CREDS = 'kubeconfig-creds'
+        AWS_CREDS = 'aws-creds'
+        
+        // Application Secrets
+        MONGO_URI = credentials('mongo-uri')
+        FLASK_SECRET = credentials('flask-secret-key')
+    }
+
+    stages {
+        stage('Init') {
+            steps {
+                script {
+                    env.GIT_COMMIT_SHORT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                }
+            }
+        }
+
+        stage('Setup Secrets') {
+            steps {
+                withCredentials([
+                    file(credentialsId: KUBECONFIG_CREDS, variable: 'KUBECONFIG'),
+                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: AWS_CREDS]
+                ]) {
+                    sh '''
+                    # Create secrets in the cluster (Idempotent-ish)
+                    kubectl delete secret office-backend-secrets --ignore-not-found
+                    kubectl create secret generic office-backend-secrets \
+                        --from-literal=MONGO_URI="$MONGO_URI" \
+                        --from-literal=FLASK_SECRET_KEY="$FLASK_SECRET"
+                    '''
+                }
+            }
+        }
+
+        stage('Build & Deploy Backend') {
+            steps {
+                // Build
+                dir('backend-api') {
+                    script {
+                        docker.withRegistry('', REGISTRY_CREDS) {
+                            def img = docker.build("${DOCKER_HUB_USER}/office-backend:${GIT_COMMIT_SHORT}")
+                            img.push()
+                            img.push("latest")
+                        }
+                    }
+                }
+                // Deploy
+                withCredentials([
+                    file(credentialsId: KUBECONFIG_CREDS, variable: 'KUBECONFIG'),
+                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: AWS_CREDS]
+                ]) {
+                    dir('devops-infra/helm/backend') {
+                        sh "helm upgrade --install office-backend . --set image.repository=${DOCKER_HUB_USER}/office-backend --set image.tag=${GIT_COMMIT_SHORT}"
+                    }
+                }
+            }
+        }
+
+        stage('Build & Deploy Frontend') {
+            steps {
+                // Build
+                dir('frontend-app') {
+                    script {
+                        docker.withRegistry('', REGISTRY_CREDS) {
+                            def img = docker.build("${DOCKER_HUB_USER}/office-frontend:${GIT_COMMIT_SHORT}")
+                            img.push()
+                            img.push("latest")
+                        }
+                    }
+                }
+                // Deploy
+                withCredentials([
+                    file(credentialsId: KUBECONFIG_CREDS, variable: 'KUBECONFIG'),
+                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: AWS_CREDS]
+                ]) {
+                    dir('devops-infra/helm/frontend') {
+                        sh "helm upgrade --install office-frontend . --set image.repository=${DOCKER_HUB_USER}/office-frontend --set image.tag=${GIT_COMMIT_SHORT}"
+                    }
+                }
+            }
+        }
+    }
+}
