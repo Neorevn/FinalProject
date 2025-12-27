@@ -161,6 +161,23 @@ This project uses Jenkins for automated delivery.
 *   **Trigger:** GitHub Webhook
 *   **Stages:** Checkout -> Test -> Build -> Scan (Trivy) -> Push (DockerHub) -> Deploy (Helm/K8s) -> Verify -> Notify (Discord)
 
+### 🚀 Automated Deployment (Jenkins)
+To deploy via Jenkins instead of manually (Replaces **Step 4**):
+
+1.  **Prerequisites**: Ensure **Steps 1, 2, and 3** (Infrastructure, kubectl, Dependencies) are complete.
+2.  **Create Job**:
+    *   Dashboard > **New Item** > Name: `office-app` > **Pipeline**.
+3.  **Configure**:
+    *   **Option A (File in Repo):**
+        *   **Definition**: Pipeline script from SCM.
+        *   **Script Path**: `devops-infra/jenkins/Jenkinsfile.groovy`.
+    *   **Option B (Direct Paste):**
+        *   **Definition**: Pipeline script.
+        *   **Script**: Copy the content of `devops-infra/jenkins/Jenkinsfile.groovy` and paste it here. Update `DOCKER_HUB_USER` directly in the text box.
+4.  **Deploy**:
+    *   Click **Build Now**.
+    *   Jenkins will checkout code, build Docker images, push to DockerHub, and deploy to EKS using Helm.
+
 ## 🧹 Cleanup
 To avoid AWS charges, destroy resources in this specific order:
 
