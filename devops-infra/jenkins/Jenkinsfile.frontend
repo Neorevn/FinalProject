@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     triggers {
-        pollSCM '* * * * *'
+        githubPush()
     }
 
     environment {
@@ -48,6 +48,7 @@ pipeline {
                 ]) {
                     echo "Deploying Frontend..."
                     sh "helm upgrade --install office-frontend devops-infra/helm/frontend --set image.repository=${DOCKER_HUB_USER}/office-frontend --set image.tag=latest"
+                    sh "kubectl rollout restart deployment office-frontend"
                 }
             }
         }

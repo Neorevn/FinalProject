@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     triggers {
-        pollSCM '* * * * *'
+        githubPush()
     }
 
     environment {
@@ -54,6 +54,7 @@ pipeline {
                     sh 'kubectl create secret generic backend-secrets --from-literal=MONGO_URI="$MONGO_URI" --from-literal=SECRET_KEY="$FLASK_SECRET"'
                     // Deploy via Helm
                     sh "helm upgrade --install office-backend devops-infra/helm/backend --set image.repository=${DOCKER_HUB_USER}/office-backend --set image.tag=latest"
+                    sh "kubectl rollout restart deployment office-backend"
                 }
             }
         }
