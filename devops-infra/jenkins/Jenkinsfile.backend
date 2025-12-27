@@ -32,7 +32,7 @@ pipeline {
                         docker.withRegistry('', REGISTRY_CREDS) {
                             def img = docker.build("${DOCKER_HUB_USER}/office-backend:${GIT_COMMIT_SHORT}")
                             img.push()
-                            // We don't push 'latest' here to avoid messing with the deploy pipeline
+                            img.push("latest")
                         }
                     }
                 }

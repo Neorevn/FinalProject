@@ -188,21 +188,12 @@ Create 3 separate Pipeline jobs in Jenkins.
 4.  **SCM**: `Git` (Enter your Repo URL).
 5.  **Script Path**: `devops-infra/jenkins/Jenkinsfile.frontend` (or `.backend`).
 
-**For `office-deploy`:**
-1.  **New Item** > **Pipeline**.
-2.  **Build Triggers** > **Leave unchecked** (Manual trigger only).
-3.  **Pipeline** > **Definition**: `Pipeline script from SCM`.
-4.  **SCM**: `Git` (Enter your Repo URL).
-5.  **Script Path**: `devops-infra/jenkins/Jenkinsfile.deploy`.
-
 | Job Name | Script Path | Description |
 | :--- | :--- | :--- |
 | **office-frontend** | `devops-infra/jenkins/Jenkinsfile.frontend` | Builds & Tests Frontend on changes to `frontend-app/` |
 | **office-backend** | `devops-infra/jenkins/Jenkinsfile.backend` | Builds & Tests Backend on changes to `backend-api/` |
-| **office-deploy** | `devops-infra/jenkins/Jenkinsfile.deploy` | **Manual Job**: Deploys the latest code to EKS. |
 
 #### 3. Important Configuration
-*   Edit the `Jenkinsfile.deploy`s and update `DOCKER_HUB_USER` to your username.
 *   Ensure Jenkins has the `aws-creds`, `docker-hub-creds`, and `kubeconfig-creds` configured.
 
 #### 4. Troubleshooting: Triggers on Localhost
