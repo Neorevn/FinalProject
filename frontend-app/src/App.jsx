@@ -1089,14 +1089,14 @@ const MeetingRoomsPanel = ({ currentUser }) => {
                     <div className="bg-black/30 p-4 rounded-xl border border-fuchsia-500/30 shadow-fuchsia-glow" style={{ animation: 'fuchsia-glow-pulse 5s infinite ease-in-out' }}>
                         <h3 className="text-2xl font-semibold text-fuchsia-400 mb-4">Book a Room</h3>
                         <div className="space-y-4">
-                            <div><label className="block text-fuchsia-300 mb-1">Room</label><select value={bookingRoomId} onChange={e => setBookingRoomId(e.target.value)} className="w-full p-2 bg-gray-900/50 border-2 border-gray-600 rounded-md focus:border-fuchsia-400 cyber-select" disabled={loading}><option value="" disabled>Select a room...</option>{rooms.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select></div>
+                            <div><label className="block text-fuchsia-300 mb-1">Room</label><select value={bookingRoomId} onChange={e => setBookingRoomId(e.target.value)} className="w-full p-2 bg-gray-900/50 border-2 border-gray-600 rounded-md focus:border-fuchsia-400 text-white cyber-select" disabled={loading}><option value="" disabled>Select a room...</option>{rooms.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select></div>
                             <div className="grid grid-cols-2 gap-4">
-                                <div><label className="block text-fuchsia-300 mb-1">Date</label><input type="date" value={bookingDate} onChange={e => setBookingDate(e.target.value)} className="w-full p-2 bg-gray-900/50 border-2 border-gray-600 rounded-md focus:border-fuchsia-400 focus:shadow-[0_0_15px_rgba(217,70,239,0.5)]" /></div>
-                                <div><label className="block text-fuchsia-300 mb-1">Time</label><input type="time" step="1800" value={bookingTime} onChange={e => setBookingTime(e.target.value)} className="w-full p-2 bg-gray-900/50 border-2 border-gray-600 rounded-md focus:border-fuchsia-400 focus:shadow-[0_0_15px_rgba(217,70,239,0.5)]" /></div>
+                                <div><label className="block text-fuchsia-300 mb-1">Date</label><input type="date" value={bookingDate} onChange={e => setBookingDate(e.target.value)} className="w-full p-2 bg-gray-900/50 border-2 border-gray-600 rounded-md focus:border-fuchsia-400 focus:shadow-[0_0_15px_rgba(217,70,239,0.5)] text-white" /></div>
+                                <div><label className="block text-fuchsia-300 mb-1">Time</label><input type="time" step="1800" value={bookingTime} onChange={e => setBookingTime(e.target.value)} className="w-full p-2 bg-gray-900/50 border-2 border-gray-600 rounded-md focus:border-fuchsia-400 focus:shadow-[0_0_15px_rgba(217,70,239,0.5)] text-white" /></div>
                             </div>
                             <div>
                                 <label className="block text-fuchsia-300 mb-1">Duration (minutes)</label>
-                                <select value={bookingDuration} onChange={e => setBookingDuration(parseInt(e.target.value))} className="w-full p-2 bg-gray-900/50 border-2 border-gray-600 rounded-md focus:border-fuchsia-400 cyber-select">
+                                <select value={bookingDuration} onChange={e => setBookingDuration(parseInt(e.target.value))} className="w-full p-2 bg-gray-900/50 border-2 border-gray-600 rounded-md focus:border-fuchsia-400 text-white cyber-select">
                                     <option value={30}>30 minutes</option>
                                     <option value={60}>60 minutes</option>
                                     <option value={90}>90 minutes</option>
@@ -1176,13 +1176,10 @@ const WellnessPanel = ({ currentUser }) => {
                 finalMessage += ` Advice: ${data.advice.join(' ')}`;
             }
             if (data.support_resources && Object.keys(data.support_resources).length > 0) {
-                finalMessage += ' We noticed you might need some extra support. Resources have been logged to the console for your privacy.';
-                console.log("--- Suggested Support Resources ---");
+                finalMessage += ' We noticed you might need some extra support.';
                 for (const [problem, resources] of Object.entries(data.support_resources)) {
-                    console.log(`For feeling ${problem}:`);
-                    resources.forEach(r => console.log(`- ${r}`));
+                    finalMessage += ` [${problem}: ${resources.join(', ')}]`;
                 }
-                console.log("------------------------------------");
             }
             setMessage(finalMessage);
             setTimeout(() => setMessage(null), 10000); // Longer timeout for more text
@@ -1192,13 +1189,9 @@ const WellnessPanel = ({ currentUser }) => {
     const handleMentalHealthSupport = async () => {
         const data = await handleApiCall('/api/wellness/mental-health/support', { method: 'POST', body: JSON.stringify({ problem: 'general' }) }, 'mental');
         if (data) {
-            // Use the integrated notification system instead of a disruptive alert and log details to console for privacy.
-            setMessage(`${data.message} Emergency contact: ${data.emergency}`);
-            console.log("--- Mental Health Support Resources ---");
-            data.help.forEach(resource => console.log(`- ${resource}`));
-            console.log(`Emergency Contact: ${data.emergency}`);
-            console.log("------------------------------------");
-            setTimeout(() => setMessage(null), 8000);
+            // Display resources in UI instead of console to prevent persistent logs in browser history
+            setMessage(`${data.message} Resources: ${data.help.join(', ')}. Emergency contact: ${data.emergency}`);
+            setTimeout(() => setMessage(null), 15000);
         }
     };
 
@@ -1238,10 +1231,10 @@ const WellnessPanel = ({ currentUser }) => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <VitalsCard title="Air Quality" data={airQuality} onRefresh={fetchAirQuality} loading={loading.air}>
-                    {d => <p>CO₂: {d.co2} ppm, Temp: {d.temperature}°C, Humidity: {d.humidity}% <br />Status: <span className="font-bold">{d.status}</span></p>}
+                    {d => <p className="text-white">CO₂: {d.co2} ppm, Temp: {d.temperature}°C, Humidity: {d.humidity}% <br />Status: <span className="font-bold">{d.status}</span></p>}
                 </VitalsCard>
                 <VitalsCard title="Noise Level" data={noise} onRefresh={fetchNoise} loading={loading.noise}>
-                    {d => <p>Level: {d.noise_db} dB <br />Status: <span className="font-bold">{d.status}</span></p>}
+                    {d => <p className="text-white">Level: {d.noise_db} dB <br />Status: <span className="font-bold">{d.status}</span></p>}
                 </VitalsCard>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
@@ -1262,7 +1255,7 @@ const WellnessPanel = ({ currentUser }) => {
                     <div className="bg-black/30 p-4 rounded-xl border border-cyan-500/30 shadow-cyan-glow">
                         <h3 className="text-xl font-semibold text-cyan-400 mb-3">Ergonomics & Breaks</h3>
                         <button onClick={checkErgonomics} disabled={loading.ergo} className="w-full mb-3 bg-transparent border-2 border-cyan-400 text-cyan-400 font-bold py-2 px-4 rounded-md transition-all duration-300 hover:bg-cyan-400 hover:text-black active:scale-95">Check My Ergonomics</button>
-                        {ergonomics && <div><p className="font-bold">Results:</p><ul className="list-disc list-inside text-cyan-300">{ergonomics.problems.map((p, i) => <li key={i}>{p}</li>)}</ul></div>}
+                        {ergonomics && <div><p className="font-bold text-white">Results:</p><ul className="list-disc list-inside text-cyan-300">{ergonomics.problems.map((p, i) => <li key={i}>{p}</li>)}</ul></div>}
                     </div>
                     <div className="bg-black/30 p-4 rounded-xl border border-fuchsia-500/30 shadow-fuchsia-glow">
                         <h3 className="text-xl font-semibold text-fuchsia-400 mb-3">Mental Health Support</h3>

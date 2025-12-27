@@ -35,7 +35,7 @@ The system follows a microservices-oriented design, decoupling the user interfac
 
 *   **Frontend (React.js)**: A Single Page Application (SPA) served via **Nginx**. It consumes the backend API to render dynamic content.
 *   **Backend (Flask)**: A lightweight Python API running on **Gunicorn**. It processes requests and interacts with the database.
-*   **Database (MongoDB)**: A NoSQL document store deployed as a **StatefulSet** to ensure data persistence across pod restarts.
+*   **Database (MongoDB)**: Uses **MongoDB Atlas** (External) for production-grade, cloud-managed data persistence.
 *   **Infrastructure**: AWS EKS (Elastic Kubernetes Service), VPC, and IAM roles provisioned via **Terraform**.
 *   **Orchestration**: Kubernetes manages the container lifecycle, configured via **Helm Charts** and manifests.
 *   **CI/CD**: **Jenkins** automates the pipeline: Build -> Test -> Scan -> Push -> Deploy.
@@ -85,7 +85,7 @@ Manage Jenkins > Credentials > System > Global credentials > Add Credentials:
    *   **`aws-creds`**: *AWS Credentials* (Access Key ID & Secret Access Key).
    *   **`docker-hub-creds`**: *Username with password* (DockerHub Login).
    *   **`kubeconfig-creds`**: *Secret file* (Upload `~/.kube/config` generated in Step 2).
-   *   **`mongo-uri`**: *Secret text* (Value: `mongodb://office-db-0.office-db-headless:27017/officedb`).
+   *   **`mongo-uri`**: *Secret text* (Value: Your MongoDB Atlas Connection String).
    *   **`flask-secret-key`**: *Secret text* (Value: `supersecretkey`).
    *   **`discord-webhook-url`**: *Secret text* (Your Discord Webhook URL).
 
@@ -117,14 +117,11 @@ aws eks update-kubeconfig --region us-east-1 --name office-app-dev-cluster
 ```
 
 ### 3. Deploy Dependencies
-Deploy the Database and Monitoring stack using raw manifests.
+Deploy the Monitoring stack using raw manifests.
 
 ```bash
 # Return to root
 cd ../../../..
-
-# Deploy MongoDB
-kubectl apply -f devops-infra/kubernetes/database/
 
 # Deploy Prometheus & Grafana
 kubectl apply -f devops-infra/kubernetes/monitoring/
@@ -194,6 +191,7 @@ Create 2 separate Pipeline jobs in Jenkins.
 | **office-backend** | `devops-infra/jenkins/Jenkinsfile.backend` | Builds & Tests Backend on changes to `backend-api/` |
 
 #### 3. Important Configuration
+*   Edit the `Jenkinsfile.deploy`s and update `DOCKER_HUB_USER` to your username.
 *   Ensure Jenkins has the `aws-creds`, `docker-hub-creds`, and `kubeconfig-creds` configured.
 
 #### 4. Troubleshooting: Triggers on Localhost
@@ -214,7 +212,6 @@ To avoid AWS charges, destroy resources in this specific order:
     ```bash
     helm uninstall office-frontend office-backend
     kubectl delete -f devops-infra/kubernetes/monitoring/
-    kubectl delete -f devops-infra/kubernetes/database/
     ```
 
 2.  **Destroy Infrastructure:**

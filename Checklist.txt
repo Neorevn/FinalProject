@@ -4,8 +4,8 @@
 
 [x] Check logo before logging in
 
-Check overall security
+[x] Check overall security
 
-Check for mockup placeholders in Wellness Tab
+[x] Check for mockup placeholders in Wellness Tab
 
 Incoporate soothing music (?)
