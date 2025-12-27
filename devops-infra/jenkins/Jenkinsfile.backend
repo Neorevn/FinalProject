@@ -41,7 +41,7 @@ pipeline {
         always {
             script {
                 def status = currentBuild.currentResult
-                def color = status == 'SUCCESS' ? '3066993' : '15158332'
+                def color = status == 'Job Done' ? '3066993' : '15158332'
                 def payload = """{
                     "embeds": [{
                         "title": "Backend Build: ${status}",
