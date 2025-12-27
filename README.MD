@@ -179,7 +179,7 @@ To set up the automated pipeline with separate jobs for Frontend, Backend, and D
 6.  Click **Add webhook**.
 
 #### 2. Create Jenkins Jobs
-Create 3 separate Pipeline jobs in Jenkins.
+Create 2 separate Pipeline jobs in Jenkins.
 
 **For `office-frontend` and `office-backend`:**
 1.  **New Item** > **Pipeline**.

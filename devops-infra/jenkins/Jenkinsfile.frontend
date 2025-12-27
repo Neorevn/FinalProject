@@ -31,7 +31,6 @@ pipeline {
                         echo "Changes detected in frontend-app. Building..."
                         docker.withRegistry('', REGISTRY_CREDS) {
                             def img = docker.build("${DOCKER_HUB_USER}/office-frontend:${GIT_COMMIT_SHORT}")
-                            img.push()
                             img.push("latest")
                         }
                     }
@@ -41,22 +40,35 @@ pipeline {
     }
 
     post {
-        always {
+        success {
             script {
                 if (env.SHOULD_BUILD == 'true') {
-                def result = currentBuild.currentResult
-                def message = result == 'SUCCESS' ? 'Job Done' : 'Kill self initiated'
-                def color = result == 'SUCCESS' ? '3066993' : '15158332'
                 def payload = """{
                     "embeds": [{
-                        "title": "Frontend Build: ${message}",
-                        "description": "Build #${env.BUILD_NUMBER} finished.",
-                        "color": ${color},
+                        "title": "Frontend Build: Job Done",
+                        "description": "Build #${env.BUILD_NUMBER} succeeded.",
+                        "color": 3066993,
                         "url": "${env.BUILD_URL}"
                     }]
                 }"""
                 writeFile file: 'discord_payload.json', text: payload
-                sh "curl -H 'Content-Type: application/json' -d @discord_payload.json $DISCORD_WEBHOOK"
+                sh "curl -H 'Content-Type: application/json' -d @discord_payload.json \$DISCORD_WEBHOOK"
+                }
+            }
+        }
+        failure {
+            script {
+                if (env.SHOULD_BUILD == 'true') {
+                def payload = """{
+                    "embeds": [{
+                        "title": "Frontend Build: Kill self initiated",
+                        "description": "Build #${env.BUILD_NUMBER} failed! Check logs immediately.",
+                        "color": 15158332,
+                        "url": "${env.BUILD_URL}"
+                    }]
+                }"""
+                writeFile file: 'discord_payload.json', text: payload
+                sh "curl -H 'Content-Type: application/json' -d @discord_payload.json \$DISCORD_WEBHOOK"
                 }
             }
         }

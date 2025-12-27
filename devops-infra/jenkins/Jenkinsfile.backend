@@ -31,7 +31,6 @@ pipeline {
                         echo "Changes detected in backend-api. Building..."
                         docker.withRegistry('', REGISTRY_CREDS) {
                             def img = docker.build("${DOCKER_HUB_USER}/office-backend:${GIT_COMMIT_SHORT}")
-                            img.push()
                             img.push("latest")
                         }
                     }
