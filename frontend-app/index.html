@@ -17,11 +17,11 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: #1a1a2e; /* Matches theme background */
-        display: flex;
+        background-color: #1a1a2e !important; /* Matches theme background */
+        display: flex !important;
         justify-content: center;
         align-items: center;
-        z-index: 2147483647; /* Max Z-Index to ensure visibility */
+        z-index: 2147483647 !important; /* Max Z-Index to ensure visibility */
         opacity: 1;
         transition: opacity 1.5s ease-out, visibility 1.5s;
       }
@@ -33,7 +33,13 @@
       }
       .splash-logo {
         width: 400px;
-        animation: pulse 2s infinite ease-in-out;
+        max-width: 80%;
+        opacity: 0;
+        animation: logoFadeIn 1s ease-out forwards, pulse 2s infinite ease-in-out 1s;
+      }
+      @keyframes logoFadeIn {
+        from { opacity: 0; transform: scale(0.8); }
+        to { opacity: 1; transform: scale(1); }
       }
       @keyframes pulse {
         0%, 100% { transform: scale(1); opacity: 1; }
