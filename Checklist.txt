@@ -1,12 +1,11 @@
-Check for duplicate files leftovers from on-prem version
+[x] Check for duplicate files leftovers from on-prem version
 
-Check parking spots not in numerical order
+[x] Check parking spots not in numerical order
 
-Check logo before logging
+[x] Check logo before logging in
 
 Check overall security
 
 Check for mockup placeholders in Wellness Tab
 
 Incoporate soothing music (?)
-

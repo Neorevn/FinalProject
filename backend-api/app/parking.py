@@ -16,7 +16,7 @@ def find_spot_by_id(spot_id):
 @token_required
 def spots_available():
     logging.info("Parking: Available spots requested.")
-    available_spots_cursor = db.parking_spots.find({'is_available': True})
+    available_spots_cursor = db.parking_spots.find({'is_available': True}).sort('id', 1)
     all_available = [spot['id'] for spot in available_spots_cursor]
     return jsonify(all_available)
 
@@ -24,7 +24,7 @@ def spots_available():
 @token_required
 def get_all_spots():
     detailed_spots = []
-    for spot in db.parking_spots.find():
+    for spot in db.parking_spots.find().sort('id', 1):
         spot_details = spot.copy()
         spot_id = spot_details['id']
         

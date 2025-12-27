@@ -4,6 +4,7 @@ pipeline {
     environment {
         DOCKER_HUB_USER = 'neorevn' // Update this
         REGISTRY_CREDS = 'docker-hub-creds'
+        DISCORD_WEBHOOK = credentials('discord-webhook-url')
     }
 
     stages {
@@ -28,6 +29,25 @@ pipeline {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                def status = currentBuild.currentResult
+                def color = status == 'SUCCESS' ? '3066993' : '15158332'
+                def payload = """{
+                    "embeds": [{
+                        "title": "Frontend Build: ${status}",
+                        "description": "Build #${env.BUILD_NUMBER} finished.",
+                        "color": ${color},
+                        "url": "${env.BUILD_URL}"
+                    }]
+                }"""
+                writeFile file: 'discord_payload.json', text: payload
+                sh "curl -H 'Content-Type: application/json' -d @discord_payload.json $DISCORD_WEBHOOK"
             }
         }
     }

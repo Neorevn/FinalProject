@@ -14,6 +14,7 @@ pipeline {
         // Application Secrets
         MONGO_URI = credentials('mongo-uri')
         FLASK_SECRET = credentials('flask-secret-key')
+        DISCORD_WEBHOOK = credentials('discord-webhook-url')
     }
 
     stages {
@@ -90,6 +91,25 @@ pipeline {
                         sh "helm upgrade --install office-frontend . --set image.repository=${DOCKER_HUB_USER}/office-frontend --set image.tag=${GIT_COMMIT_SHORT}"
                     }
                 }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                def status = currentBuild.currentResult
+                def color = status == 'SUCCESS' ? '3066993' : '15158332' // Green or Red
+                def payload = """{
+                    "embeds": [{
+                        "title": "Office App Deploy: ${status}",
+                        "description": "Build #${env.BUILD_NUMBER} finished.",
+                        "color": ${color},
+                        "url": "${env.BUILD_URL}"
+                    }]
+                }"""
+                writeFile file: 'discord_payload.json', text: payload
+                sh "curl -H 'Content-Type: application/json' -d @discord_payload.json $DISCORD_WEBHOOK"
             }
         }
     }
