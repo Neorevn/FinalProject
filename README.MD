@@ -74,13 +74,19 @@ docker run -u root --rm -d -p 8080:8080 -p 50000:50000 -v jenkins-data:/var/jenk
 *   **`Go to`** http://localhost:8080, paste password, and install "Suggested plugins". 
 *   **`Install`** Extra Plugins:
 Manage Jenkins > Plugins > Available: Docker Pipeline, Kubernetes CLI, AWS Credentials. 
+*   **`Install Build Tools`**:
+    Run these commands in your terminal to install AWS CLI and Helm inside the Jenkins container:
+    ```bash
+    docker exec -u root -it jenkins bash -c "apt-get update && apt-get install -y unzip && curl 'https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip' -o 'awscliv2.zip' && unzip awscliv2.zip && ./aws/install"
+    docker exec -u root -it jenkins bash -c "curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 && chmod 700 get_helm.sh && ./get_helm.sh"
+    ```
 *   **`Configure Credentials`**:
 Manage Jenkins > Credentials > System > Global credentials > Add Credentials:
    *   **`aws-creds`**: *AWS Credentials* (Access Key ID & Secret Access Key).
    *   **`docker-hub-creds`**: *Username with password* (DockerHub Login).
    *   **`kubeconfig-creds`**: *Secret file* (Upload `~/.kube/config` generated in Step 2).
    *   **`mongo-uri`**: *Secret text* (Value: `mongodb://office-db-0.office-db-headless:27017/officedb`).
-   *   **`flask-secret-key`**: *Secret text* (Value: `supersecretkey`). (Note: This maps to `SECRET_KEY` in the pod).
+   *   **`flask-secret-key`**: *Secret text* (Value: `supersecretkey`).
    *   **`discord-webhook-url`**: *Secret text* (Your Discord Webhook URL).
 
 **Quick Install (Windows):**
@@ -127,15 +133,6 @@ kubectl apply -f devops-infra/kubernetes/monitoring/
 ### 4. Deploy Applications (Helm)
 Deploy the Frontend and Backend using Helm Charts.
 
-**1. Create Secrets:**
-The backend requires database credentials. Create them manually:
-```bash
-kubectl create secret generic backend-secrets \
-  --from-literal=MONGO_URI='mongodb://office-db-0.office-db-headless:27017/officedb' \
-  --from-literal=SECRET_KEY='supersecretkey'
-```
-
-**2. Install Charts:**
 ```bash
 # Install Backend
 helm upgrade --install office-backend ./devops-infra/helm/backend
@@ -169,6 +166,55 @@ For security and cost savings, Grafana is not exposed publicly. Access it via po
 This project uses Jenkins for automated delivery.
 *   **Trigger:** GitHub Webhook
 *   **Stages:** Checkout -> Test -> Build -> Scan (Trivy) -> Push (DockerHub) -> Deploy (Helm/K8s) -> Verify -> Notify (Discord)
+
+### 🚀 Automated CI/CD Setup
+To set up the automated pipeline with separate jobs for Frontend, Backend, and Deployment:
+
+#### 1. Configure GitHub Webhook
+1.  Go to your GitHub Repository > **Settings** > **Webhooks**.
+2.  Click **Add webhook**.
+3.  **Payload URL**: `http://<YOUR_JENKINS_IP>:8080/github-webhook/` (Ensure the trailing slash is present).
+4.  **Content type**: `application/json`.
+5.  **Which events?**: Just the `push` event.
+6.  Click **Add webhook**.
+
+#### 2. Create Jenkins Jobs
+Create 3 separate Pipeline jobs in Jenkins.
+
+**For `office-frontend` and `office-backend`:**
+1.  **New Item** > **Pipeline**.
+2.  **Build Triggers** > Check **GitHub hook trigger for GITScm polling**.
+3.  **Pipeline** > **Definition**: `Pipeline script from SCM`.
+4.  **SCM**: `Git` (Enter your Repo URL).
+5.  **Script Path**: `devops-infra/jenkins/Jenkinsfile.frontend` (or `.backend`).
+
+**For `office-deploy`:**
+1.  **New Item** > **Pipeline**.
+2.  **Build Triggers** > **Leave unchecked** (Manual trigger only).
+3.  **Pipeline** > **Definition**: `Pipeline script from SCM`.
+4.  **SCM**: `Git` (Enter your Repo URL).
+5.  **Script Path**: `devops-infra/jenkins/Jenkinsfile.deploy`.
+
+| Job Name | Script Path | Description |
+| :--- | :--- | :--- |
+| **office-frontend** | `devops-infra/jenkins/Jenkinsfile.frontend` | Builds & Tests Frontend on changes to `frontend-app/` |
+| **office-backend** | `devops-infra/jenkins/Jenkinsfile.backend` | Builds & Tests Backend on changes to `backend-api/` |
+| **office-deploy** | `devops-infra/jenkins/Jenkinsfile.deploy` | **Manual Job**: Deploys the latest code to EKS. |
+
+#### 3. Important Configuration
+*   Edit the `Jenkinsfile.deploy`s and update `DOCKER_HUB_USER` to your username.
+*   Ensure Jenkins has the `aws-creds`, `docker-hub-creds`, and `kubeconfig-creds` configured.
+
+#### 4. Troubleshooting: Triggers on Localhost
+If Jenkins is running locally (Docker Desktop), GitHub cannot send Webhooks to `localhost`.
+**Workaround:** Configure Jenkins to poll GitHub for changes.
+1.  Go to your **office-frontend** and **office-backend** jobs.
+2.  Click **Configure**.
+3.  Under **Build Triggers**:
+    *   Uncheck *GitHub hook trigger*.
+    *   Check **Poll SCM**.
+    *   Schedule: `* * * * *` (Checks every minute).
+4.  Click **Save**.
 
 ## 🧹 Cleanup
 To avoid AWS charges, destroy resources in this specific order:

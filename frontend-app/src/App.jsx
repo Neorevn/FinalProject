@@ -241,7 +241,8 @@ const ParkingPanel = ({ currentUser }) => {
             const spotsData = await spotsRes.json();
             const reservationsData = await reservationsRes.json();
 
-            setSpots(spotsData);
+            // Ensure spots are sorted numerically by ID (1-20)
+            setSpots(spotsData.sort((a, b) => Number(a.id) - Number(b.id)));
             setMyReservations(reservationsData);
             setError(null);
         } catch (e) {
