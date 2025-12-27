@@ -242,7 +242,11 @@ const ParkingPanel = ({ currentUser }) => {
             const reservationsData = await reservationsRes.json();
 
             // Ensure spots are sorted numerically by ID (1-20)
-            const sortedSpots = [...spotsData].sort((a, b) => (parseInt(a.id, 10) || 0) - (parseInt(b.id, 10) || 0));
+            const sortedSpots = Array.isArray(spotsData) ? [...spotsData].sort((a, b) => {
+                const idA = parseInt(a.id, 10);
+                const idB = parseInt(b.id, 10);
+                return (isNaN(idA) ? 0 : idA) - (isNaN(idB) ? 0 : idB);
+            }) : [];
             setSpots(sortedSpots);
             setMyReservations(reservationsData);
             setError(null);
@@ -1341,7 +1345,7 @@ const App = () => {
             if (splashScreen) {
                 splashScreen.classList.add('hidden');
             }
-        }, 2500); // 2.5 seconds
+        }, 3000); // 3 seconds
 
         // Clean up the timer if the component unmounts
         return () => clearTimeout(timer);
