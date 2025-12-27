@@ -38,20 +38,32 @@ pipeline {
     }
 
     post {
-        always {
+        success {
             script {
-                def status = currentBuild.currentResult
-                def color = status == 'Job Done' ? '3066993' : '15158332'
                 def payload = """{
                     "embeds": [{
-                        "title": "Backend Build: ${status}",
-                        "description": "Build #${env.BUILD_NUMBER} finished.",
-                        "color": ${color},
+                        "title": "Backend Build: Job Done",
+                        "description": "Build #${env.BUILD_NUMBER} succeeded.",
+                        "color": 3066993,
                         "url": "${env.BUILD_URL}"
                     }]
                 }"""
                 writeFile file: 'discord_payload.json', text: payload
-                sh "curl -H 'Content-Type: application/json' -d @discord_payload.json $DISCORD_WEBHOOK"
+                sh "curl -H 'Content-Type: application/json' -d @discord_payload.json \$DISCORD_WEBHOOK"
+            }
+        }
+        failure {
+            script {
+                def payload = """{
+                    "embeds": [{
+                        "title": "Backend Build: Kill self initiated",
+                        "description": "Build #${env.BUILD_NUMBER} failed! Check logs immediately.",
+                        "color": 15158332,
+                        "url": "${env.BUILD_URL}"
+                    }]
+                }"""
+                writeFile file: 'discord_payload.json', text: payload
+                sh "curl -H 'Content-Type: application/json' -d @discord_payload.json \$DISCORD_WEBHOOK"
             }
         }
     }
