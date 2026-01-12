@@ -1,5 +1,4 @@
 import React from 'react';
-import ChatTab from './components/ChatTab';
 
 // --- Reusable Spinner Component ---
 const Spinner = () => (
@@ -1442,7 +1441,7 @@ const App = () => {
                 </main>
             </div>
             <footer className="w-full text-center text-xs text-gray-600 font-mono pt-4">
-                Co-Founders Reut, Fuad and Neorevn
+                Digitized by ** Neorevn **
             </footer>
         </React.Fragment>
     );
