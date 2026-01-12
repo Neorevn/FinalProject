@@ -29,6 +29,7 @@ The **Office Management System** is a 3-tier web application designed to demonst
 *   **REST API**: A Python Flask backend handling business logic and data processing.
 *   **Data Persistence**: MongoDB storage for reliable data retention.
 *   **Observability**: Built-in health checks and metrics for monitoring system status.
+*   **Live Chat**: Real-time messaging for employees to collaborate.
 
 ## 🏗️ Architecture & Design
 The system follows a microservices-oriented design, decoupling the user interface from the data layer to allow independent scaling and deployment.
@@ -117,7 +118,7 @@ aws eks update-kubeconfig --region us-east-1 --name office-app-dev-cluster
 ```
 
 ### 3. Deploy Dependencies
-Deploy the Database and Monitoring stack using raw manifests.
+Deploy the Monitoring stack using raw manifests.
 
 ```bash
 # Return to root
@@ -213,7 +214,6 @@ To avoid AWS charges, destroy resources in this specific order:
     ```bash
     helm uninstall office-frontend office-backend
     kubectl delete -f devops-infra/kubernetes/monitoring/
-    kubectl delete -f devops-infra/kubernetes/database/
     ```
 
 2.  **Destroy Infrastructure:**

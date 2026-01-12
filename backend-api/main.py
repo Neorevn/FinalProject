@@ -13,6 +13,7 @@ from Backend.automation import automation_bp, process_event
 from Backend.auth import auth_bp
 from Backend.meeting_rooms import meeting_rooms_bp
 from Backend.wellness import wellness_bp
+from Backend.chat import chat_bp
 
 # Load environment variables from .env file.
 load_dotenv()
@@ -119,6 +120,15 @@ def initialize_database():
         ]
         db.mental_health_resources.insert_many(default_resources)
 
+    # Initialize Chat
+    if db.chat_messages.count_documents({}) == 0:
+        logging.info("Application: Initializing chat...")
+        db.chat_messages.insert_one({
+            'username': 'System',
+            'message': 'Welcome to the organization chat!',
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        })
+
     logging.info("Application: Database initialization check complete.")
 
 def create_app():
@@ -141,6 +151,7 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(meeting_rooms_bp)
     app.register_blueprint(wellness_bp)
+    app.register_blueprint(chat_bp)
 
     # This error handler is the key to integrating the React SPA.
     # If a route is not found by the server (i.e., it's not an API route and not a static file),
