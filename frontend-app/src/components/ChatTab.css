@@ -1,7 +1,7 @@
 .chat-container {
     display: flex;
     flex-direction: column;
-    height: 80vh; /* Occupy most of the screen height */
+    height: 100%; /* Fill parent container */
     max-width: 800px;
     margin: 0 auto;
     border: 1px solid #ccc;
@@ -69,4 +69,25 @@
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
+}
+
+.no-messages {
+    text-align: center;
+    color: #999;
+    margin-top: 20px;
+    font-style: italic;
+}
+
+.loading {
+    text-align: center;
+    color: #666;
+    padding: 20px;
+}
+
+@media (max-width: 768px) {
+    .chat-container {
+        height: calc(100vh - 120px); /* Adjust for navbar on mobile */
+        border: none;
+        border-radius: 0;
+    }
 }

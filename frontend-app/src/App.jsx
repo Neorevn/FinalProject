@@ -1,4 +1,5 @@
 import React from 'react';
+import ChatTab from './components/ChatTab';
 
 // --- Reusable Spinner Component ---
 const Spinner = () => (
@@ -1382,6 +1383,8 @@ const App = () => {
                 return <WellnessPanel currentUser={currentUser} />;
             case 'users':
                 return <UsersPanel currentUser={currentUser} />;
+            case 'chat':
+                return <ChatTab currentUser={currentUser} />;
             default:
                 return <ClimatePanel currentUser={currentUser} />;
         }
@@ -1427,6 +1430,7 @@ const App = () => {
                     <NavItem view="climate" label="Environment" icon="🌡️" />
                     <NavItem view="parking" label="Parking" icon="🅿️" />
                     <NavItem view="meetings" label="Meeting Rooms" icon="🤝" />
+                    <NavItem view="chat" label="Chat" icon="💬" />
                     {/* Show automation tab to all, but functionality is restricted inside */}
                     <NavItem view="wellness" label="Wellness" icon="❤️" />
                     <NavItem view="automation" label="Automation" icon="🤖" />

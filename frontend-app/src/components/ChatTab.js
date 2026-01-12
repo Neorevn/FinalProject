@@ -1,19 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ChatTab.css';
 
-const ChatTab = () => {
+const ChatTab = ({ currentUser }) => {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
     const messagesEndRef = useRef(null);
-    const [isAdmin, setIsAdmin] = useState(false);
+    const isAdmin = currentUser?.role === 'admin';
 
     useEffect(() => {
-        // Check if user is admin based on stored role
-        const role = localStorage.getItem('role');
-        if (role === 'admin') {
-            setIsAdmin(true);
-        }
         fetchMessages();
         
         // Poll for new messages every 3 seconds
@@ -33,7 +28,7 @@ const ChatTab = () => {
         try {
             const token = localStorage.getItem('token');
             const response = await fetch('/api/chat/messages', {
-                headers: { 'x-access-token': token }
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {
                 const data = await response.json();
@@ -55,7 +50,7 @@ const ChatTab = () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-access-token': token
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({ message: newMessage })
             });
@@ -76,7 +71,7 @@ const ChatTab = () => {
             const token = localStorage.getItem('token');
             const response = await fetch(`/api/chat/messages/${messageId}`, {
                 method: 'DELETE',
-                headers: { 'x-access-token': token }
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (response.ok) {
@@ -92,6 +87,10 @@ const ChatTab = () => {
     return (
         <div className="chat-container">
             <div className="chat-messages">
+                {loading && <div className="loading">Loading chat history...</div>}
+                {messages.length === 0 && !loading && (
+                    <div className="no-messages">No messages yet. Be the first to say hello!</div>
+                )}
                 {messages.map((msg, index) => (
                     <div key={msg._id?.$oid || index} className="chat-message">
                         <div className="message-header">
