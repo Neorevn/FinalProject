@@ -49,12 +49,9 @@ pipeline {
                     file(credentialsId: KUBECONFIG_CREDS, variable: 'KUBECONFIG'),
                     [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: AWS_CREDS]
                 ]) {
-                    echo "Deploying Backend & Secrets..."
-                    // Create/Update Secrets
-                    sh 'kubectl delete secret backend-secrets --ignore-not-found'
-                    sh 'kubectl create secret generic backend-secrets --from-literal=MONGO_URI="$MONGO_URI" --from-literal=SECRET_KEY="$FLASK_SECRET"'
-                    // Deploy via Helm
-                    sh "helm upgrade --install office-backend devops-infra/helm/backend --set image.repository=${DOCKER_HUB_USER}/office-backend --set image.tag=latest"
+                    echo "Deploying Backend..."
+                    // Deploy via Helm, passing secrets as arguments
+                    sh "helm upgrade --install office-backend devops-infra/helm/backend --set image.repository=${DOCKER_HUB_USER}/office-backend --set image.tag=latest --set secrets.mongoUri=\"$MONGO_URI\" --set secrets.flaskSecretKey=\"$FLASK_SECRET\""
                 }
             }
         }

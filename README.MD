@@ -131,8 +131,13 @@ kubectl apply -f devops-infra/kubernetes/monitoring/
 Deploy the Frontend and Backend using Helm Charts.
 
 ```bash
+# 1. Create Secrets (Manual Deployment Only)
+# Copy the template and fill in your credentials (this file is ignored by git)
+cp devops-infra/helm/backend/secrets.template.yaml devops-infra/helm/backend/secrets.yaml
+# Edit devops-infra/helm/backend/secrets.yaml with your real values now
+
 # Install Backend
-helm upgrade --install office-backend ./devops-infra/helm/backend
+helm upgrade --install office-backend ./devops-infra/helm/backend -f devops-infra/helm/backend/secrets.yaml
 
 # Install Frontend
 helm upgrade --install office-frontend ./devops-infra/helm/frontend
