@@ -91,14 +91,14 @@ const ChatTab = ({ currentUser }) => {
                 {messages.length === 0 && !loading && (
                     <div className="no-messages">No messages yet. Be the first to say hello!</div>
                 )}
-                {messages.map((msg, index) => (
-                    <div key={msg._id?.$oid || index} className="chat-message">
+                {Array.isArray(messages) && messages.map((msg, index) => (
+                    <div key={msg?._id?.$oid || index} className="chat-message">
                         <div className="message-header">
-                            <span className="username">{msg.username}</span>
-                            <span className="timestamp">{new Date(msg.timestamp).toLocaleString()}</span>
-                            {isAdmin && <button className="delete-btn" onClick={() => handleDelete(msg._id?.$oid)}>×</button>}
+                            <span className="username">{msg?.username}</span>
+                            <span className="timestamp">{new Date(msg?.timestamp).toLocaleString()}</span>
+                            {isAdmin && <button className="delete-btn" onClick={() => handleDelete(msg?._id?.$oid)}>×</button>}
                         </div>
-                        <div className="message-body">{msg.message}</div>
+                        <div className="message-body">{msg?.message}</div>
                     </div>
                 ))}
                 <div ref={messagesEndRef} />

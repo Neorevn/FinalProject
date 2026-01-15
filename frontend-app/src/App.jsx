@@ -1,5 +1,5 @@
 import React from 'react';
-import ChatTab from './components/ChatTab.jsx';
+import ChatTab from './components/ChatTab';
 
 // --- Reusable Spinner Component ---
 const Spinner = () => (
