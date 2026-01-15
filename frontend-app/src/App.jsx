@@ -1,5 +1,5 @@
 import React from 'react';
-import ChatTab from './components/ChatTab';
+import ChatTab from './components/ChatTab.jsx';
 
 // --- Reusable Spinner Component ---
 const Spinner = () => (
@@ -9,6 +9,44 @@ const Spinner = () => (
         <div className="scanner-bar"></div>
     </div>
 );
+
+// --- Error Boundary Component ---
+// Catches runtime errors in child components to prevent the entire UI from crashing.
+class ErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null };
+    }
+
+    static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+    }
+
+    componentDidCatch(error, errorInfo) {
+        console.error("Uncaught error in component:", error, errorInfo);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div className="p-6 bg-red-900/30 border border-red-500 rounded-xl text-center">
+                    <h2 className="text-2xl text-red-400 font-bold mb-2">Something went wrong.</h2>
+                    <p className="text-gray-300 mb-4">The component crashed with the following error:</p>
+                    <pre className="bg-black/50 p-4 rounded text-left text-red-300 overflow-auto text-sm font-mono">
+                        {this.state.error && this.state.error.toString()}
+                    </pre>
+                    <button 
+                        onClick={() => this.setState({ hasError: false })}
+                        className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded transition-colors"
+                    >
+                        Try Again
+                    </button>
+                </div>
+            );
+        }
+        return this.props.children;
+    }
+}
 
 // --- API Helper ---
 const authenticatedFetch = async (url, options = {}) => {
@@ -1438,7 +1476,9 @@ const App = () => {
                 </nav>
                 {/* Subtract nav height and padding from main content area */}
                 <main className="p-6 md:p-8" style={{ height: 'calc(100% - 55px)' }}>
-                    {renderView()}
+                    <ErrorBoundary>
+                        {renderView()}
+                    </ErrorBoundary>
                 </main>
             </div>
             <footer className="w-full text-center text-xs text-gray-600 font-mono pt-4">

@@ -9,6 +9,7 @@ const ChatTab = ({ currentUser }) => {
     const isAdmin = currentUser?.role === 'admin';
 
     useEffect(() => {
+        console.log("ChatTab mounted");
         fetchMessages();
         
         // Poll for new messages every 3 seconds
@@ -85,13 +86,13 @@ const ChatTab = ({ currentUser }) => {
     };
 
     return (
-        <div className="chat-container">
+        <div className="chat-container" style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f9f9f9', color: '#333' }}>
             <div className="chat-messages">
                 {loading && <div className="loading">Loading chat history...</div>}
                 {messages.length === 0 && !loading && (
                     <div className="no-messages">No messages yet. Be the first to say hello!</div>
                 )}
-                {Array.isArray(messages) && messages.map((msg, index) => (
+                {Array.isArray(messages) && messages.length > 0 && messages.map((msg, index) => (
                     <div key={msg?._id?.$oid || index} className="chat-message">
                         <div className="message-header">
                             <span className="username">{msg?.username}</span>
