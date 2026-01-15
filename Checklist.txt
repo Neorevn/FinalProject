@@ -16,4 +16,4 @@ Intergrate officer app with google drive
 
 [x] Create a live chat for employees
 
-Have the whole frontend be dynamic to fit mobile and PC
+[x] Have the whole frontend be dynamic to fit mobile and PC

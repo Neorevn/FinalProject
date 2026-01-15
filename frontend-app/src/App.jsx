@@ -1345,13 +1345,13 @@ const StatusLine = () => {
 
     // Render placeholders to prevent layout shift
     return (
-        <div className="w-full text-center text-lg text-cyan-300/80 flex justify-center items-center space-x-6 font-mono h-7">
+        <div className="w-full text-center text-xs md:text-lg text-cyan-300/80 flex flex-wrap justify-center items-center gap-2 md:gap-6 font-mono min-h-[1.75rem]">
             {loading || !climateStatus ? <span>TEMP: --°C</span> : <span>TEMP: {climateStatus.temperature}°C</span>}
-            <span className="text-gray-600">|</span>
+            <span className="text-gray-600 hidden md:inline">|</span>
             {loading || !climateStatus ? <span>LIGHTS: ---</span> : <span>LIGHTS: {climateStatus.lights_on ? 'ON' : 'OFF'}</span>}
-            <span className="text-gray-600">|</span>
+            <span className="text-gray-600 hidden md:inline">|</span>
             {loading || rooms.length === 0 ? <span>ROOMS: -- AVAILABLE</span> : <span>ROOMS: {availableRooms} AVAILABLE</span>}
-            <span className="text-gray-600">|</span>
+            <span className="text-gray-600 hidden md:inline">|</span>
             {loading || parkingSpots.length === 0 ? <span>PARKING: -- SPOTS AVAILABLE</span> : <span>PARKING: {availableSpots} SPOTS AVAILABLE</span>}
         </div>
     );
@@ -1431,40 +1431,40 @@ const App = () => {
     const NavItem = ({ view, label, icon }) => (
         <button
             onClick={() => setCurrentView(view)}
-            className={`flex items-center space-x-2 py-3 px-6 transition-all duration-200 border-b-2 -mb-px ${currentView === view
+            className={`flex items-center space-x-1 md:space-x-2 py-2 px-3 md:py-3 md:px-6 transition-all duration-200 border-b-2 -mb-px ${currentView === view
                 ? 'border-cyan-400 text-cyan-300'
                 : 'border-transparent text-gray-400 hover:text-white hover:border-cyan-500/50'
                 }`}
         >
-            <span className="text-xl">{icon}</span>
-            <span className="font-semibold text-md">{label}</span>
+            <span className="text-lg md:text-xl">{icon}</span>
+            <span className="font-semibold text-xs md:text-md">{label}</span>
         </button>
     );
 
     return (
         <React.Fragment>
-            <div className="flex justify-center items-center gap-6 mb-4">
-                <img src="/logo.png" alt="Officer Logo" className="h-20 w-20" />
-                <h1 className="text-7xl md:text-8xl font-bold text-cyan-400 text-center" style={{ animation: 'text-cyan-glow-pulse 4s infinite ease-in-out' }}>
+            <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-6 mb-4 p-4">
+                <img src="/logo.png" alt="Officer Logo" className="h-16 w-16 md:h-20 md:w-20" />
+                <h1 className="text-5xl md:text-8xl font-bold text-cyan-400 text-center" style={{ animation: 'text-cyan-glow-pulse 4s infinite ease-in-out' }}>
                     Officer
                 </h1>
             </div>
-            <div className="w-full max-w-screen-2xl mb-2">
-                <div className="grid grid-cols-3 items-center w-full mb-1 text-sm">
-                    <div className="justify-self-start text-gray-500">
+            <div className="w-full max-w-screen-2xl mb-2 px-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 items-center w-full mb-1 text-sm gap-2">
+                    <div className="justify-self-center md:justify-self-start text-gray-500">
                         User: <span className="text-fuchsia-400">{currentUser.username} ({currentUser.role})</span>
                     </div>
                     <div className="justify-self-center">
                         <DigitalClock />
                     </div>
-                    <div className="justify-self-end">
+                    <div className="justify-self-center md:justify-self-end">
                         <button onClick={handleLogout} className="text-gray-500 hover:text-cyan-300">Logout</button>
                     </div>
                 </div>
                 <StatusLine currentUser={currentUser} />
             </div>
-            <div className="bg-black bg-opacity-50 backdrop-blur-xl rounded-2xl border border-cyan-500/50 shadow-cyan-glow" style={{ width: '1440px', height: '820px', animation: 'cyan-glow-pulse 4s infinite ease-in-out' }}>
-                <nav className="flex justify-center border-b border-cyan-500/30 px-2">
+            <div className="bg-black bg-opacity-50 backdrop-blur-xl rounded-2xl border border-cyan-500/50 shadow-cyan-glow w-full md:w-[95%] max-w-[1440px] h-[85vh] md:h-[820px] flex flex-col overflow-hidden" style={{ animation: 'cyan-glow-pulse 4s infinite ease-in-out' }}>
+                <nav className="flex flex-wrap justify-center border-b border-cyan-500/30 px-2 py-1">
                     <NavItem view="climate" label="Environment" icon="🌡️" />
                     <NavItem view="parking" label="Parking" icon="🅿️" />
                     <NavItem view="meetings" label="Meeting Rooms" icon="🤝" />
@@ -1475,7 +1475,7 @@ const App = () => {
                     {currentUser.role === 'admin' && <NavItem view="users" label="Users" icon="👥" />}
                 </nav>
                 {/* Subtract nav height and padding from main content area */}
-                <main className="p-6 md:p-8" style={{ height: 'calc(100% - 55px)' }}>
+                <main className="p-4 md:p-8 flex-grow overflow-hidden relative">
                     <ErrorBoundary>
                         {renderView()}
                     </ErrorBoundary>
