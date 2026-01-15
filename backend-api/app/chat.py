@@ -11,8 +11,6 @@ chat_bp = Blueprint('chat_bp', __name__)
 @chat_bp.route('/api/chat/messages', methods=['GET'])
 @token_required
 def get_messages():
-    # Get last 50 messages, sorted by timestamp descending (newest first)
-    # Then reverse them to send oldest first to the client
     cursor = db.chat_messages.find({}).sort('timestamp', -1).limit(50)
     messages = list(cursor)
     return json.loads(json_util.dumps(messages[::-1]))

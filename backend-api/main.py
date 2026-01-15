@@ -125,7 +125,7 @@ def initialize_database():
         logging.info("Application: Initializing chat...")
         db.chat_messages.insert_one({
             'username': 'System',
-            'message': 'Welcome to the organization chat!',
+            'message': 'Welcome to the Cyb3r ch4t!',
             'timestamp': datetime.now(timezone.utc).isoformat()
         })
 
