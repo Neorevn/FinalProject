@@ -16,6 +16,7 @@ from .parking import parking_bp
 from .meeting_rooms import meeting_rooms_bp
 from .wellness import wellness_bp
 from .metrics import metrics_bp, before_request_hook, after_request_hook
+from .chat import chat_bp
 
 def initialize_database():
     """Initializes the database with default data if empty."""
@@ -76,6 +77,15 @@ def initialize_database():
         db.create_collection('wellness_checkins')
         db.wellness_checkins.create_index("createdAt", expireAfterSeconds=604800)
 
+    # Initialize Chat
+    if db.chat_messages.count_documents({}) == 0:
+        logging.info("Application: Initializing chat...")
+        db.chat_messages.insert_one({
+            'username': 'System',
+            'message': 'Welcome to the organization chat!',
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        })
+
 def create_app():
     app = Flask(__name__)
     
@@ -96,6 +106,7 @@ def create_app():
     app.register_blueprint(meeting_rooms_bp)
     app.register_blueprint(wellness_bp)
     app.register_blueprint(metrics_bp)
+    app.register_blueprint(chat_bp)
     
     # Register Metrics Hooks
     app.before_request(before_request_hook)
