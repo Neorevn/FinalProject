@@ -59,9 +59,13 @@ const ChatTab = ({ currentUser }) => {
             if (response.ok) {
                 setNewMessage('');
                 fetchMessages(); // Refresh immediately
+            } else {
+                console.error("Send failed:", response.status, response.statusText);
+                alert("Failed to send message. Please try again.");
             }
         } catch (error) {
             console.error("Error sending message:", error);
+            alert("Error sending message. Check console.");
         }
     };
 
@@ -86,7 +90,7 @@ const ChatTab = ({ currentUser }) => {
     };
 
     return (
-        <div className="chat-container" style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f9f9f9', color: '#333' }}>
+        <div className="chat-container">
             <div className="chat-messages">
                 {loading && <div className="loading">Loading chat history...</div>}
                 {messages.length === 0 && !loading && (
