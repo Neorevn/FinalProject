@@ -96,7 +96,7 @@ const ChatTab = ({ currentUser }) => {
                         <div className="message-header">
                             <span className="username">{msg.username}</span>
                             <span className="timestamp">{new Date(msg.timestamp).toLocaleString()}</span>
-                            {isAdmin && <button className="delete-btn" onClick={() => handleDelete(msg._id.$oid)}>×</button>}
+                            {isAdmin && <button className="delete-btn" onClick={() => handleDelete(msg._id?.$oid)}>×</button>}
                         </div>
                         <div className="message-body">{msg.message}</div>
                     </div>
